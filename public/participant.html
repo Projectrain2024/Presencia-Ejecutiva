@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evaluación — LHH Presencia Ejecutiva</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--pu:#3A1259;--pu-mid:#7B3FA8;--gold:#E9A020;--bg:#F6F1FC;--card:#fff;--tx:#1C0D36;--tx2:#6B547E;--border:#D4C0E8;--ok:#1A7A45}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px}
+.brand{font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-mid);margin-bottom:20px}
+.pv-card{background:var(--card);border:1px solid var(--border);border-radius:13px;width:100%;max-width:620px;overflow:hidden}
+.pv-hdr{background:linear-gradient(135deg,var(--pu),#5A2090);padding:22px 26px}
+.pv-ttl{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:3px}
+.pv-sub{font-size:12px;color:rgba(255,255,255,.65)}
+.pv-intro{padding:18px 26px 0;font-size:13px;color:var(--tx2);line-height:1.65}
+.pv-intro strong{color:var(--tx)}
+.name-wrap{padding:18px 26px 0}
+.f-lbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:5px}
+.f-inp{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13.5px;color:var(--tx);background:var(--bg);outline:none;transition:border-color .14s}
+.f-inp:focus{border-color:var(--pu-mid)}
+.sit-list{padding:16px 26px 0;display:flex;flex-direction:column;gap:13px}
+.sit{border:1px solid var(--border);border-radius:9px;padding:13px 15px}
+.sit-num{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);margin-bottom:3px}
+.sit-txt{font-size:13px;line-height:1.55;margin-bottom:10px}
+.sit-scale{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.scale-lbl{font-size:10px;color:var(--tx2);flex-shrink:0}
+.scale-btns{display:flex;gap:5px}
+.sb{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;transition:all .13s;display:flex;align-items:center;justify-content:center;font-family:inherit}
+.sb:hover{border-color:var(--pu-mid);color:var(--pu-mid)}
+.sb.on{background:var(--pu-mid);border-color:var(--pu-mid);color:#fff}
+.pv-foot{padding:18px 26px 28px}
+.progress-txt{font-size:12px;color:var(--tx2);margin-bottom:10px}
+.pv-submit{width:100%;padding:13px;background:var(--gold);color:#1C0D36;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .13s}
+.pv-submit:hover{opacity:.88}
+.pv-submit:disabled{opacity:.4;cursor:not-allowed}
+.pv-err{font-size:12px;color:#C0392B;margin-top:8px;text-align:center}
+.ty{text-align:center;padding:44px 26px}
+.ty-icon{font-size:46px;margin-bottom:14px}
+.ty-ttl{font-family:'Playfair Display',serif;font-size:21px;margin-bottom:8px}
+.ty-sub{font-size:13.5px;color:var(--tx2);line-height:1.6}
+.spinner{text-align:center;padding:40px;color:var(--tx2);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="brand">LHH · Presencia Ejecutiva</div>
+<div class="pv-card" id="card">
+  <div class="spinner">Cargando evaluación…</div>
+</div>
+
+<script>
+const FR_SIT = [
+  { id:'s1',  base:'Experto',       text:'Cuando [L] da instrucciones sobre cómo realizar una tarea, las sigo porque confío en su conocimiento técnico.' },
+  { id:'s2',  base:'Experto',       text:'Acepto las decisiones de [L] porque ha demostrado dominio del tema a lo largo del tiempo.' },
+  { id:'s3',  base:'Experto',       text:'Cuando [L] propone un enfoque diferente, lo considero seriamente porque sé que sabe de lo que habla.' },
+  { id:'s4',  base:'Referente',     text:'Me esfuerzo más cuando [L] está al tanto de mi trabajo, porque valoro su opinión sobre mí.' },
+  { id:'s5',  base:'Referente',     text:'La forma en que [L] enfrenta los retos me inspira a actuar de manera similar.' },
+  { id:'s6',  base:'Referente',     text:'Me identifico con los valores y la actitud de [L], lo que me lleva a alinearme con sus expectativas.' },
+  { id:'s7',  base:'Legítimo',      text:'Sigo las directrices de [L] porque su posición en la organización le da la autoridad para tomar esas decisiones.' },
+  { id:'s8',  base:'Legítimo',      text:'Aunque no siempre esté de acuerdo, respeto las decisiones de [L] porque su rol lo requiere.' },
+  { id:'s9',  base:'Legítimo',      text:'[L] tiene la autoridad formal para asignar responsabilidades y yo las acepto como parte del contrato organizacional.' },
+  { id:'s10', base:'Recompensa',    text:'Me esfuerzo por cumplir con lo que [L] espera porque sé que puede reconocer mi desempeño de formas que valoro.' },
+  { id:'s11', base:'Recompensa',    text:'La posibilidad de recibir reconocimiento o beneficios de parte de [L] me motiva a dar lo mejor de mí.' },
+  { id:'s12', base:'Coercitivo',    text:'Evito ciertas acciones porque sé que [L] tiene la capacidad de generar consecuencias si no cumplo.' },
+  { id:'s13', base:'Coercitivo',    text:'Hay situaciones en las que actúo de cierta manera simplemente para evitar conflictos o sanciones por parte de [L].' },
+  { id:'s14', base:'Informacional', text:'Confío en la información que [L] comparte porque sé que tiene acceso a datos relevantes que yo no tengo.' },
+  { id:'s15', base:'Informacional', text:'[L] me convence con argumentos y datos concretos, no solo con su posición o carisma.' },
+];
+
+function esc(s){ const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML }
+
+// Get program ID from URL: /p/:id
+const pid = location.pathname.split('/').filter(Boolean).pop();
+let prog = null;
+const answers = {};
+let submitted = false;
+let pvErr = '';
+
+async function load() {
+  try {
+    const r = await fetch('/api/public/programs/' + pid);
+    const j = await r.json();
+    if (!r.ok) { showErr(j.error || 'Programa no encontrado.'); return; }
+    prog = j;
+    draw();
+  } catch(e) { showErr('Error al cargar la evaluación.'); }
+}
+
+function showErr(msg) {
+  document.getElementById('card').innerHTML = `<div class="ty"><div class="ty-icon">⚠️</div><div class="ty-ttl">No disponible</div><div class="ty-sub">${esc(msg)}</div></div>`;
+}
+
+function draw() {
+  if (submitted) {
+    document.getElementById('card').innerHTML = `<div class="ty">
+      <div class="ty-icon">🎯</div>
+      <div class="ty-ttl">¡Gracias por tu evaluación!</div>
+      <div class="ty-sub">Tu respuesta ha sido registrada para el programa <strong>${esc(prog.name)}</strong>.<br>Tu facilitadora recibirá los resultados de forma agregada.</div>
+    </div>`;
+    return;
+  }
+
+  const hasFR  = (prog.instruments||[]).includes('fr-equipo');
+  const hasRBS = (prog.instruments||[]).includes('rbs');
+  const leader = prog.leader_name || prog.name;
+  const answered = Object.keys(answers).length;
+
+  const sitHtml = hasFR ? `<div class="sit-list">${FR_SIT.map((s,i) => {
+    const txt = s.text.replace(/\[L\]/g, `<strong>${esc(leader)}</strong>`);
+    return `<div class="sit">
+      <div class="sit-num">Situación ${i+1} · ${s.base}</div>
+      <div class="sit-txt">${txt}</div>
+      <div class="sit-scale">
+        <span class="scale-lbl">Poco</span>
+        <div class="scale-btns">${[1,2,3,4,5].map(v=>`<button class="sb${answers[s.id]===v?' on':''}" onclick="setAns('${s.id}',${v})">${v}</button>`).join('')}</div>
+        <span class="scale-lbl">Mucho</span>
+      </div>
+    </div>`;
+  }).join('')}</div>` : '';
+
+  const rbsNote = hasRBS && !hasFR ? `<div style="padding:16px 26px 0">
+    <div class="sit"><div class="sit-num">Reflected Best Self</div><div class="sit-txt" style="margin-bottom:0">Tu facilitadora te enviará las instrucciones para completar las entrevistas con tu red.</div></div>
+  </div>` : '';
+
+  document.getElementById('card').innerHTML = `
+    <div class="pv-hdr"><div class="pv-ttl">${esc(prog.name)}</div><div class="pv-sub">${esc(prog.context||'')} · Evaluación de liderazgo</div></div>
+    ${hasFR?`<div class="pv-intro">Estás evaluando a <strong>${esc(leader)}</strong>. Para cada situación, indica en qué medida te describes — del <strong>1</strong> (no me identifica) al <strong>5</strong> (me identifica completamente). Tus respuestas son <strong>anónimas</strong>.</div>`:''}
+    <div class="name-wrap"><label class="f-lbl">Tu nombre</label><input id="pv-name" class="f-inp" placeholder="Nombre completo" value="${esc(_name)}"></div>
+    ${sitHtml}
+    ${rbsNote}
+    <div class="pv-foot">
+      ${hasFR?`<div class="progress-txt">${answered} de 15 situaciones respondidas</div>`:''}
+      <button class="pv-submit" onclick="submit()"${hasFR&&answered<15?' disabled':''}>Enviar evaluación</button>
+      ${pvErr?`<div class="pv-err">${esc(pvErr)}</div>`:''}
+    </div>`;
+}
+
+let _name = '';
+window.setAns = function(sid, v) { answers[sid]=v; _name=document.getElementById('pv-name')?.value||_name; draw(); };
+
+window.submit = async function() {
+  _name = document.getElementById('pv-name')?.value?.trim()||'';
+  if (!_name) { pvErr='Ingresa tu nombre para continuar.'; draw(); return; }
+  const hasFR = (prog.instruments||[]).includes('fr-equipo');
+  if (hasFR && Object.keys(answers).length < 15) { pvErr=`Completa las ${15-Object.keys(answers).length} situación(es) restante(s).`; draw(); return; }
+  pvErr = '';
+  try {
+    const r = await fetch('/api/responses', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        program_id: pid,
+        participant_name: _name,
+        instrument: hasFR ? 'fr-equipo' : 'rbs',
+        answers: hasFR ? {...answers} : {}
+      })
+    });
+    const j = await r.json();
+    if (!r.ok) { pvErr = j.error || 'Error al enviar.'; draw(); return; }
+    submitted = true; draw();
+  } catch(e) { pvErr='Error de conexión. Intenta de nuevo.'; draw(); }
+};
+
+load();
+</script>
+</body>
+</html>

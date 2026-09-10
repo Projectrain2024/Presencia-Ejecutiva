@@ -1,0 +1,19 @@
+{
+  "name": "presencia-ejecutiva-hub",
+  "version": "1.0.0",
+  "description": "Hub del Facilitador — LHH Presencia Ejecutiva",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "pg": "^8.11.3",
+    "nanoid": "^3.3.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

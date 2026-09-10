@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acceso — Hub LHH</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--pu:#3A1259;--pu-mid:#7B3FA8;--gold:#E9A020;--bg:#F6F1FC;--card:#fff;--tx:#1C0D36;--tx2:#6B547E;--border:#D4C0E8}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.box{background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:380px;overflow:hidden;box-shadow:0 8px 40px rgba(58,18,89,.1)}
+.box-top{background:linear-gradient(135deg,var(--pu),#5A2090);padding:32px 32px 28px;text-align:center}
+.lhh{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.hub-name{font-size:20px;font-weight:600;color:#fff}
+.hub-sub{font-size:12px;color:rgba(255,255,255,.65);margin-top:3px}
+.box-body{padding:28px 32px 32px}
+.f-lbl{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:6px}
+.f-inp{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:14px;color:var(--tx);background:var(--bg);outline:none;transition:border-color .14s;margin-bottom:18px}
+.f-inp:focus{border-color:var(--pu-mid)}
+.btn-login{width:100%;padding:12px;background:var(--gold);color:#1C0D36;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .14s}
+.btn-login:hover{opacity:.88}
+.err{font-size:12.5px;color:#C0392B;margin-bottom:14px;text-align:center}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="box-top">
+    <div class="lhh">LHH · Colombia</div>
+    <div class="hub-name">Hub del Facilitador</div>
+    <div class="hub-sub">Presencia Ejecutiva</div>
+  </div>
+  <div class="box-body">
+    <form method="POST" action="/login">
+      <label class="f-lbl" for="pw">Contraseña</label>
+      <input id="pw" class="f-inp" type="password" name="password" placeholder="••••••••" autofocus>
+      <script>if(location.search.includes('error'))document.write('<div class="err">Contraseña incorrecta. Intenta de nuevo.</div>')</script>
+      <button class="btn-login" type="submit">Ingresar</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

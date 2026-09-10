@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hub Facilitador — LHH</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap">
+<style>
+:root{--pu:#3A1259;--pu-mid:#7B3FA8;--pu-soft:#B68DD4;--pu-border:#D4C0E8;--gold:#E9A020;--bg:#F6F1FC;--card:#fff;--sidebar:#261040;--sidebar-hi:#3A1259;--tx:#1C0D36;--tx2:#6B547E;--tx-bar:#C4B0DC;--ok-bg:#E8F6EE;--ok:#1A7A45;--wa-bg:#FFF3DC;--wa:#9A6200;--pe-bg:#EEE7F8;--pe:#5C3A8A;--tra-bg:#EDE0F8;--tra:#6B2D9A;--trb-bg:#FFF3DC;--trb:#9A6200;--sw:220px}
+@media(prefers-color-scheme:dark){:root{--bg:#110820;--card:#1C0B34;--sidebar:#0B0418;--sidebar-hi:#1C0B34;--tx:#EDE0F8;--tx2:#9A7FBE;--pu-border:#4A2878;--ok-bg:#0A2018;--ok:#50E89A;--wa-bg:#1E1000;--wa:#E8A840;--pe-bg:#1A0A2E;--pe:#C89EF0;--tra-bg:#2A1050;--tra:#C89EF0;--trb-bg:#2E1E00;--trb:#E8B84A}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh;display:flex}
+/* Sidebar */
+.sidebar{width:var(--sw);min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:20}
+.sb-brand{padding:26px 20px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.sb-lhh{font-family:'Playfair Display',serif;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.sb-name{font-size:15px;font-weight:600;color:#fff}
+.sb-sub{font-size:11px;color:var(--tx-bar);margin-top:1px}
+.sb-sec{padding:14px 12px 4px}
+.sb-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--tx-bar);opacity:.5;padding:0 8px;margin-bottom:3px}
+.nav{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--tx-bar);font-size:13px;margin-bottom:1px;transition:background .12s,color .12s}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.on{background:var(--sidebar-hi);color:#fff;font-weight:500;border-left:3px solid var(--gold);padding-left:7px}
+.nav svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
+.nav.on svg{opacity:1}
+.sb-foot{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between}
+.sb-user{display:flex;align-items:center;gap:10px}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--pu-mid),var(--gold));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff}
+.sb-foot .un{font-size:13px;color:#fff;font-weight:500}
+.sb-foot .ur{font-size:11px;color:var(--tx-bar)}
+.logout{font-size:11px;color:var(--tx-bar);text-decoration:none;opacity:.6}
+.logout:hover{opacity:1;color:#fff}
+/* Main */
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--card);border-bottom:1px solid var(--pu-border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.tb-title{font-size:15px;font-weight:600}
+.tb-acts{display:flex;gap:8px}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:opacity .12s}
+.btn:hover{opacity:.85}
+.btn svg{width:14px;height:14px}
+.btn-primary{background:var(--gold);color:#1C0D36}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--pu-border)}
+.btn-danger{background:#FDECEA;color:#C0392B;border:1px solid #F5C6C2}
+/* Content */
+.content{padding:24px 28px 56px}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--pu-border);border-radius:11px;padding:17px 19px}
+.stat-lbl{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);margin-bottom:4px}
+.stat-val{font-size:26px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.stat-sub{font-size:11.5px;color:var(--tx2);margin-top:3px}
+/* Section header */
+.sec-hdr{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px}
+.sec-ttl{font-size:14px;font-weight:600}
+/* Cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--pu-border);border-radius:11px;padding:18px 20px;cursor:pointer;transition:border-color .14s,box-shadow .14s}
+.card:hover{border-color:var(--pu-mid)}
+.card.sel{border-color:var(--pu-mid);box-shadow:0 0 0 3px rgba(123,63,168,.12)}
+.card-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:9px}
+.card-client{font-family:'Playfair Display',serif;font-size:16px;line-height:1.2}
+.card-code{font-size:11px;color:var(--tx2);margin-top:2px}
+.pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.pill.act{background:var(--ok-bg);color:var(--ok)}
+.pill.pend{background:var(--pe-bg);color:var(--pe)}
+.pill.closed{background:var(--wa-bg);color:var(--wa)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+.tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:5px}
+.tag.ra{background:var(--tra-bg);color:var(--tra)}
+.tag.rb{background:var(--trb-bg);color:var(--trb)}
+.pbar-hdr{display:flex;justify-content:space-between;font-size:11.5px;color:var(--tx2);margin-bottom:5px}
+.pbar-hdr strong{color:var(--tx);font-weight:600}
+.pbar{height:5px;background:var(--bg);border-radius:99px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--pu-mid),var(--pu-soft));transition:width .4s}
+.pbar-fill.full{background:linear-gradient(90deg,#2A9D5C,#48C87A)}
+.card-meta{font-size:11.5px;color:var(--tx2);margin-top:9px;display:flex;gap:12px;flex-wrap:wrap}
+.empty{background:var(--card);border:1px dashed var(--pu-border);border-radius:11px;padding:40px 20px;text-align:center;grid-column:1/-1}
+.empty-icon{font-size:30px;margin-bottom:10px}
+.empty-ttl{font-size:15px;font-weight:600;margin-bottom:5px}
+.empty-sub{font-size:13px;color:var(--tx2);margin-bottom:16px}
+/* Detail */
+.detail{background:var(--card);border:1px solid var(--pu-border);border-radius:11px;overflow:hidden}
+.det-hdr{background:linear-gradient(135deg,var(--pu),#5A2090);padding:20px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.det-ttl{font-family:'Playfair Display',serif;font-size:19px;color:#fff;margin-bottom:3px}
+.det-sub{font-size:12px;color:rgba(255,255,255,.6)}
+.det-acts{display:flex;gap:7px;flex-shrink:0;flex-wrap:wrap}
+.btn-w{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.22);font-family:inherit;font-size:12px;font-weight:500;padding:6px 12px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn-w:hover{background:rgba(255,255,255,.22)}
+.btn-gld{background:var(--gold);color:#1C0D36;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.det-body{padding:20px 24px}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.det-col-ttl{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
+.ilist{display:flex;flex-direction:column;gap:7px}
+.irow{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:8px;border:1px solid var(--pu-border)}
+.irow-info{display:flex;align-items:center;gap:9px}
+.idot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.idot.ra{background:var(--tra)}.idot.rb{background:var(--trb)}
+.irow-name{font-size:13px;font-weight:500}
+.irow-type{font-size:11px;color:var(--tx2)}
+.irow-stat .n{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.irow-stat .of{font-size:10.5px;color:var(--tx2);text-align:right}
+.add-link{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--pu-mid);font-weight:500;margin-top:10px;cursor:pointer}
+.add-link:hover{opacity:.75}
+.ptbl{width:100%;border-collapse:collapse;margin-top:2px}
+.ptbl th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);padding:0 0 7px;border-bottom:1px solid var(--pu-border)}
+.ptbl td{padding:9px 0;font-size:12.5px;border-bottom:1px solid var(--pu-border);vertical-align:middle}
+.ptbl tr:last-child td{border-bottom:none}
+.pav{width:24px;height:24px;border-radius:50%;background:var(--tra-bg);color:var(--tra);font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:6px;flex-shrink:0;vertical-align:middle}
+/* Chart */
+.chart-rows{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.c-row{display:grid;grid-template-columns:90px 1fr 32px;align-items:center;gap:8px}
+.c-lbl{font-size:11.5px;color:var(--tx2);text-align:right}
+.c-track{height:7px;background:var(--bg);border-radius:99px;overflow:hidden}
+.c-bar{height:100%;border-radius:99px;transition:width .5s}
+.c-val{font-size:11.5px;font-variant-numeric:tabular-nums;text-align:right}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--card);border-radius:14px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.modal-hdr{padding:20px 22px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--card);z-index:1}
+.modal-ttl{font-family:'Playfair Display',serif;font-size:18px}
+.modal-x{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:22px;line-height:1;padding:4px}
+.modal-body{padding:18px 22px 24px}
+.f-row{margin-bottom:13px}
+.f-row-2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:13px}
+.f-lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:5px}
+.f-inp{width:100%;padding:9px 12px;border:1px solid var(--pu-border);border-radius:8px;font-family:inherit;font-size:13.5px;color:var(--tx);background:var(--bg);outline:none;transition:border-color .14s}
+.f-inp:focus{border-color:var(--pu-mid)}
+.instr-opts{display:flex;flex-direction:column;gap:6px}
+.instr-opt{display:flex;align-items:center;gap:9px;padding:9px 12px;border:1px solid var(--pu-border);border-radius:8px;cursor:pointer;transition:border-color .12s,background .12s}
+.instr-opt:hover{border-color:var(--pu-mid)}
+.instr-opt.on{border-color:var(--pu-mid);background:var(--pe-bg)}
+.instr-opt input{accent-color:var(--pu-mid);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.instr-opt-lbl{font-size:13px;font-weight:500}
+.instr-opt-sub{font-size:11px;color:var(--tx2)}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--pu-border)}
+/* Toast */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1C0D36;color:#fff;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+/* Loading */
+.loading{color:var(--tx2);font-size:13px;text-align:center;padding:40px}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-lhh">LHH · Colombia</div>
+    <div class="sb-name">Hub del Facilitador</div>
+    <div class="sb-sub">Presencia Ejecutiva</div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">Principal</div>
+    <div class="nav on">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 9a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3zm8-9a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zm0 8a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1h-4a1 1 0 01-1-1v-5z"/></svg>
+      Programas
+    </div>
+  </div>
+  <div class="sb-sec">
+    <div class="sb-lbl">Instrumentos</div>
+    <div class="nav">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+      French &amp; Raven
+    </div>
+    <div class="nav">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+      Reflected Best Self
+    </div>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="av">AC</div>
+      <div><div class="un">Ana Catalina</div><div class="ur">Facilitadora LHH</div></div>
+    </div>
+    <a class="logout" href="/logout">Salir</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title">Programas</div>
+    <div class="tb-acts">
+      <button class="btn btn-primary" onclick="openModal('new-prog')">
+        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+        Nuevo programa
+      </button>
+    </div>
+  </div>
+  <div class="content" id="content">
+    <div class="loading">Cargando programas…</div>
+  </div>
+</div>
+
+<div id="modal-root"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── Constants ── */
+const INSTRUMENTS = {
+  'fr-equipo': { label:'French & Raven · Equipo', tag:'ra', desc:'Los miembros del equipo evalúan al líder — anónimo' },
+  'rbs':       { label:'Reflected Best Self',      tag:'rb', desc:'Reflexión de fortalezas con ayuda de la red' }
+};
+const BASE_CLR = { Experto:'#7B3FA8', Referente:'#E9A020', Legítimo:'#2A9D5C', Recompensa:'#1A6A8A', Coercitivo:'#C0392B', Informacional:'#8E44AD' };
+const BASE_SIT = { Experto:['s1','s2','s3'], Referente:['s4','s5','s6'], Legítimo:['s7','s8','s9'], Recompensa:['s10','s11'], Coercitivo:['s12','s13'], Informacional:['s14','s15'] };
+
+/* ── State ── */
+let programs = [], selId = null, modal = null, detailData = {};
+
+/* ── Helpers ── */
+function esc(s){ const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML }
+function fmtDate(s){ try{return s?new Date(s+'T12:00:00').toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'}):'';}catch{return s||''} }
+function initials(n){ return (n||'').trim().split(/\s+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()||'?' }
+function showToast(m){ const t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400) }
+async function api(url,opts={}){ const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opts});const j=await r.json();if(!r.ok)throw new Error(j.error||r.statusText);return j }
+
+/* ── Load programs ── */
+async function loadPrograms() {
+  programs = await api('/api/programs');
+  render();
+}
+
+/* ── Render ── */
+function render() {
+  const totalPart = programs.reduce((s,p) => s + (p._parts||0), 0);
+  const totalResp = programs.reduce((s,p) => s + (p._resps||0), 0);
+  const next = programs.find(p => p.session_date && p.status === 'active');
+
+  const statsHtml = `<div class="stats">
+    <div class="stat"><div class="stat-lbl">Programas activos</div><div class="stat-val">${programs.filter(p=>p.status==='active').length}</div><div class="stat-sub">${programs.filter(p=>p.status==='pending').length} por configurar</div></div>
+    <div class="stat"><div class="stat-lbl">Participantes</div><div class="stat-val">${detailData[selId]?.participants?.length||'—'}</div><div class="stat-sub">en programa seleccionado</div></div>
+    <div class="stat"><div class="stat-lbl">Evaluaciones</div><div class="stat-val">${detailData[selId]?.responses?.length||'—'}</div><div class="stat-sub">recibidas</div></div>
+    <div class="stat"><div class="stat-lbl">Próxima sesión</div><div class="stat-val" style="font-size:17px;margin-top:3px">${next?fmtDate(next.session_date):'—'}</div><div class="stat-sub">${next?esc(next.name):'Sin sesiones'}</div></div>
+  </div>`;
+
+  const cardsHtml = programs.length === 0
+    ? `<div class="empty"><div class="empty-icon">📋</div><div class="empty-ttl">Aún no hay programas</div><div class="empty-sub">Crea el primero para empezar a gestionar evaluaciones.</div><button class="btn btn-primary" onclick="openModal('new-prog')"><svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg> Nuevo programa</button></div>`
+    : programs.map(p => renderCard(p)).join('');
+
+  const detHtml = selId && detailData[selId] ? renderDetail(selId) : '';
+
+  document.getElementById('content').innerHTML = statsHtml
+    + `<div class="sec-hdr"><div class="sec-ttl">Programas</div></div>`
+    + `<div class="cards">${cardsHtml}</div>`
+    + (selId && detailData[selId]
+        ? `<div class="sec-hdr"><div class="sec-ttl">Detalle — ${esc(programs.find(p=>p.id===selId)?.name||'')}</div></div>${detHtml}`
+        : '');
+
+  renderModal();
+}
+
+function renderCard(p) {
+  const d = detailData[p.id];
+  const parts = d?.participants?.length || 0;
+  const resps = d?.responses?.length || 0;
+  const pct   = parts > 0 ? Math.round(resps/parts*100) : 0;
+  const instrs = (p.instruments||[]).map(k=>INSTRUMENTS[k]).filter(Boolean);
+  return `<div class="card${selId===p.id?' sel':''}" onclick="selectProg('${esc(p.id)}')">
+    <div class="card-hdr">
+      <div><div class="card-client">${esc(p.name)}</div><div class="card-code">${esc(p.code||'')}${p.context?' · '+esc(p.context):''}</div></div>
+      <span class="pill ${p.status==='active'?'act':p.status==='closed'?'closed':'pend'}">${p.status==='active'?'Activo':p.status==='closed'?'Cerrado':'Por configurar'}</span>
+    </div>
+    <div class="tags">${instrs.map(i=>`<span class="tag ${i.tag}">${esc(i.label)}</span>`).join('')}</div>
+    <div class="pbar-hdr"><span>Evaluaciones</span><span><strong>${resps}</strong> / ${parts} participante${parts!==1?'s':''}</span></div>
+    <div class="pbar"><div class="pbar-fill${pct===100?' full':''}" style="width:${pct}%"></div></div>
+    <div class="card-meta">${p.session_date?`<span>📅 ${fmtDate(p.session_date)}</span>`:''}${p.deadline?`<span>⏰ Cierre: ${fmtDate(p.deadline)}</span>`:''}</div>
+  </div>`;
+}
+
+function renderDetail(pid) {
+  const prog = programs.find(p => p.id === pid);
+  const d    = detailData[pid];
+  if (!prog || !d) return '';
+  const ptlist  = d.participants || [];
+  const rlist   = d.responses   || [];
+  const instrs  = (prog.instruments||[]).map(k=>({key:k,...INSTRUMENTS[k]})).filter(x=>x.label);
+  const frResps = rlist.filter(r => r.instrument==='fr-equipo' && r.answers && Object.keys(r.answers).length>0);
+  const instrCounts = {};
+  instrs.forEach(i => { instrCounts[i.key] = rlist.filter(r=>r.instrument===i.key).length; });
+  const link = `${location.origin}/p/${pid}`;
+
+  return `<div class="detail">
+    <div class="det-hdr">
+      <div><div class="det-ttl">${esc(prog.name)} · Presencia Ejecutiva</div><div class="det-sub">${esc(prog.code||'')} · ${ptlist.length} participante${ptlist.length!==1?'s':''}</div></div>
+      <div class="det-acts">
+        <button class="btn-w" onclick="copyLink('${esc(link)}')">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"/></svg>
+          Copiar link
+        </button>
+        <button class="btn-gld" onclick="openModal('add-part')">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+          Participante
+        </button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="deleteProg('${esc(pid)}')">Eliminar</button>
+      </div>
+    </div>
+    <div class="det-body">
+      <div class="det-grid">
+        <div>
+          <div class="det-col-ttl">Instrumentos</div>
+          <div class="ilist">
+            ${instrs.length===0
+              ? `<div style="font-size:13px;color:var(--tx2)">Sin instrumentos configurados.</div>`
+              : instrs.map(i=>`<div class="irow">
+                  <div class="irow-info"><div class="idot ${i.tag}"></div><div><div class="irow-name">${esc(i.label)}</div><div class="irow-type">${esc(i.desc)}</div></div></div>
+                  <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${ptlist.length}</span></div><div class="of">completaron</div></div>
+                </div>`).join('')}
+          </div>
+          ${frResps.length>0?`<div style="margin-top:16px"><div class="det-col-ttl">F&R agregado · ${esc(prog.leader_name||prog.name)}</div>${buildChart(frResps)}</div>`:''}
+        </div>
+        <div>
+          <div class="det-col-ttl">Participantes</div>
+          <table class="ptbl">
+            <thead><tr><th>Nombre</th>${instrs.map(i=>`<th style="text-align:center">${i.key==='fr-equipo'?'F&R':'RBS'}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${ptlist.length===0
+                ? `<tr><td colspan="${1+instrs.length}" style="color:var(--tx2);font-size:12px;padding:10px 0">Agrega participantes para comenzar.</td></tr>`
+                : ptlist.map(pt=>{
+                    const done={};
+                    rlist.filter(r=>r.participant_name===pt.name).forEach(r=>{done[r.instrument]=true});
+                    return `<tr>
+                      <td><span class="pav">${initials(pt.name)}</span>${esc(pt.name)}</td>
+                      ${instrs.map(i=>`<td style="text-align:center">${done[i.key]?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--tx2)">—</span>'}</td>`).join('')}
+                    </tr>`;
+                  }).join('')}
+            </tbody>
+          </table>
+          ${ptlist.length>0?`<div class="add-link" onclick="openModal('add-part')"><svg viewBox="0 0 20 20" fill="currentColor" style="width:13px;height:13px"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg> Agregar participante</div>`:''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildChart(frResps) {
+  const bases=['Experto','Referente','Legítimo','Recompensa','Coercitivo','Informacional'];
+  const avgs={};
+  bases.forEach(b=>{
+    const ids=BASE_SIT[b];
+    const total=frResps.reduce((s,r)=>s+ids.reduce((a,id)=>a+(Number(r.answers?.[id])||0),0)/ids.length,0);
+    avgs[b]=frResps.length>0?total/frResps.length:0;
+  });
+  return `<div class="chart-rows">${bases.map(b=>`
+    <div class="c-row">
+      <div class="c-lbl">${b}</div>
+      <div class="c-track"><div class="c-bar" style="width:${Math.round(avgs[b]/5*100)}%;background:${BASE_CLR[b]}"></div></div>
+      <div class="c-val">${avgs[b].toFixed(1)}</div>
+    </div>`).join('')}</div>
+  <div style="font-size:11px;color:var(--tx2);margin-top:8px">${frResps.length} evaluación${frResps.length!==1?'es':''} · escala 1–5</div>`;
+}
+
+/* ── Actions ── */
+async function selectProg(id) {
+  if (selId === id) { selId = null; render(); return; }
+  selId = id;
+  render();
+  try {
+    detailData[id] = await api('/api/programs/' + id);
+    render();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+async function deleteProg(id) {
+  if (!confirm('¿Eliminar este programa y todos sus datos?')) return;
+  try {
+    await api('/api/programs/' + id, { method:'DELETE' });
+    if (selId === id) selId = null;
+    delete detailData[id];
+    await loadPrograms();
+    showToast('Programa eliminado');
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(()=>showToast('✓ Link copiado')).catch(()=>showToast(url));
+}
+
+/* ── Modals ── */
+function openModal(type) { modal = type; renderModal(); }
+function closeModal()    { modal = null; renderModal(); }
+
+function renderModal() {
+  const root = document.getElementById('modal-root');
+  if (!root) return;
+  if (!modal) { root.innerHTML = ''; return; }
+  if (modal === 'new-prog')  root.innerHTML = modalNewProg();
+  if (modal === 'add-part')  root.innerHTML = modalAddPart();
+}
+
+function modalNewProg() {
+  return `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-hdr"><div class="modal-ttl">Nuevo programa</div><button class="modal-x" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="f-row"><label class="f-lbl">Nombre del cliente *</label><input id="fn" class="f-inp" placeholder="Ej: Talma"></div>
+        <div class="f-row-2">
+          <div><label class="f-lbl">Código</label><input id="fc" class="f-inp" placeholder="PE-2026-001"></div>
+          <div><label class="f-lbl">Estado</label><select id="fst" class="f-inp"><option value="active">Activo</option><option value="pending">Por configurar</option></select></div>
+        </div>
+        <div class="f-row"><label class="f-lbl">Contexto / área</label><input id="fx" class="f-inp" placeholder="Ej: Operaciones Aeroportuarias"></div>
+        <div class="f-row"><label class="f-lbl">Nombre del líder (F&amp;R)</label><input id="fl" class="f-inp" placeholder="Nombre del líder que será evaluado"></div>
+        <div class="f-row-2">
+          <div><label class="f-lbl">Fecha de sesión</label><input id="fsd" class="f-inp" type="date"></div>
+          <div><label class="f-lbl">Fecha límite</label><input id="fd" class="f-inp" type="date"></div>
+        </div>
+        <div class="f-row">
+          <label class="f-lbl">Instrumentos</label>
+          <div class="instr-opts">
+            ${Object.entries(INSTRUMENTS).map(([k,v])=>`
+              <label class="instr-opt" id="io-${k}">
+                <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')">
+                <div><div class="instr-opt-lbl">${esc(v.label)}</div><div class="instr-opt-sub">${esc(v.desc)}</div></div>
+              </label>`).join('')}
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="saveProg()">Crear programa</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleOpt(k) {
+  const el = document.getElementById('io-' + k);
+  if (el) el.classList.toggle('on', document.getElementById('cb-' + k).checked);
+}
+
+async function saveProg() {
+  const name = document.getElementById('fn')?.value?.trim();
+  if (!name) { alert('El nombre del cliente es obligatorio.'); return; }
+  const instruments = Object.keys(INSTRUMENTS).filter(k => document.getElementById('cb-' + k)?.checked);
+  try {
+    const prog = await api('/api/programs', { method:'POST', body: JSON.stringify({
+      name, code: document.getElementById('fc')?.value?.trim()||'',
+      context: document.getElementById('fx')?.value?.trim()||'',
+      leader_name: document.getElementById('fl')?.value?.trim()||'',
+      status: document.getElementById('fst')?.value||'active',
+      session_date: document.getElementById('fsd')?.value||null,
+      deadline: document.getElementById('fd')?.value||null,
+      instruments
+    })});
+    closeModal();
+    selId = prog.id;
+    await loadPrograms();
+    detailData[prog.id] = await api('/api/programs/' + prog.id);
+    render();
+    showToast('✓ Programa creado');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function modalAddPart() {
+  if (!selId) return '';
+  const prog = programs.find(p => p.id === selId);
+  return `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-hdr"><div class="modal-ttl">Agregar participante</div><button class="modal-x" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div style="font-size:12.5px;color:var(--tx2);margin-bottom:14px">Programa: <strong style="color:var(--tx)">${esc(prog?.name||'')}</strong></div>
+        <div class="f-row"><label class="f-lbl">Nombre completo *</label><input id="fpn" class="f-inp" placeholder="Ej: Marcela Ríos" autofocus></div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="savePart()">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function savePart() {
+  const name = document.getElementById('fpn')?.value?.trim();
+  if (!name || !selId) { alert('Ingresa un nombre.'); return; }
+  try {
+    await api('/api/programs/' + selId + '/participants', { method:'POST', body: JSON.stringify({ name }) });
+    detailData[selId] = await api('/api/programs/' + selId);
+    closeModal();
+    render();
+    showToast('✓ Participante agregado');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+/* ── Init ── */
+loadPrograms();
+</script>
+</body>
+</html>
