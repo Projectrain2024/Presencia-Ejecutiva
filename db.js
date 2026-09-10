@@ -53,6 +53,7 @@ async function pgInit() {
       id               VARCHAR(80)  PRIMARY KEY,
       program_id       VARCHAR(32)  NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
       participant_name VARCHAR(200),
+      leader_name      VARCHAR(200) DEFAULT '',
       instrument       VARCHAR(50),
       answers          JSONB        DEFAULT '{}',
       submitted_at     TIMESTAMPTZ  DEFAULT NOW()
@@ -205,17 +206,17 @@ const db = {
     return !!loadJson().programs[id];
   },
 
-  async addResponse(id, program_id, participant_name, instrument, answers) {
+  async addResponse(id, program_id, participant_name, leader_name, instrument, answers) {
     if (USE_PG) {
       const { rows } = await pgQuery(
-        `INSERT INTO responses (id,program_id,participant_name,instrument,answers)
-         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [id, program_id, participant_name, instrument, JSON.stringify(answers||{})]
+        `INSERT INTO responses (id,program_id,participant_name,leader_name,instrument,answers)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+        [id, program_id, participant_name, leader_name||'', instrument, JSON.stringify(answers||{})]
       );
       return rows[0];
     }
     const data = loadJson();
-    const row = { id, program_id, participant_name, instrument, answers: answers||{}, submitted_at: new Date().toISOString() };
+    const row = { id, program_id, participant_name, leader_name: leader_name||'', instrument, answers: answers||{}, submitted_at: new Date().toISOString() };
     data.responses[id] = row;
     saveJson(data);
     return row;

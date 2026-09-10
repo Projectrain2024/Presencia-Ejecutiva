@@ -97,13 +97,13 @@ app.get('/api/public/programs/:id', async (req, res) => {
 });
 
 app.post('/api/responses', async (req, res) => {
-  const { program_id, participant_name, instrument, answers } = req.body;
+  const { program_id, participant_name, leader_name, instrument, answers } = req.body;
   if (!program_id || !participant_name?.trim() || !instrument)
     return res.status(400).json({ error: 'Faltan campos requeridos' });
   try {
     if (!(await db.programExists(program_id)))
       return res.status(404).json({ error: 'Programa no encontrado' });
-    const row = await db.addResponse(nanoid(24), program_id, participant_name.trim(), instrument, answers);
+    const row = await db.addResponse(nanoid(24), program_id, participant_name.trim(), leader_name?.trim()||'', instrument, answers);
     res.json(row);
   } catch(e) { res.status(500).json({ error: e.message }); }
 });

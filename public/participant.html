@@ -103,7 +103,7 @@ function draw() {
 
   const hasFR  = (prog.instruments||[]).includes('fr-equipo');
   const hasRBS = (prog.instruments||[]).includes('rbs');
-  const leader = prog.leader_name || prog.name;
+  const leader = _leader || 'el/la líder';
   const answered = Object.keys(answers).length;
 
   const sitHtml = hasFR ? `<div class="sit-list">${FR_SIT.map((s,i) => {
@@ -119,16 +119,14 @@ function draw() {
     </div>`;
   }).join('')}</div>` : '';
 
-  const rbsNote = hasRBS && !hasFR ? `<div style="padding:16px 26px 0">
-    <div class="sit"><div class="sit-num">Reflected Best Self</div><div class="sit-txt" style="margin-bottom:0">Tu facilitadora te enviará las instrucciones para completar las entrevistas con tu red.</div></div>
-  </div>` : '';
-
   document.getElementById('card').innerHTML = `
     <div class="pv-hdr"><div class="pv-ttl">${esc(prog.name)}</div><div class="pv-sub">${esc(prog.context||'')} · Evaluación de liderazgo</div></div>
-    ${hasFR?`<div class="pv-intro">Estás evaluando a <strong>${esc(leader)}</strong>. Para cada situación, indica en qué medida te describes — del <strong>1</strong> (no me identifica) al <strong>5</strong> (me identifica completamente). Tus respuestas son <strong>anónimas</strong>.</div>`:''}
-    <div class="name-wrap"><label class="f-lbl">Tu nombre</label><input id="pv-name" class="f-inp" placeholder="Nombre completo" value="${esc(_name)}"></div>
+    ${hasFR?`<div class="pv-intro">Para cada situación, indica en qué medida te describes — del <strong>1</strong> (no me identifica) al <strong>5</strong> (me identifica completamente). Tus respuestas son <strong>anónimas</strong>.</div>`:''}
+    <div class="name-wrap">
+      <div class="f-row"><label class="f-lbl">Tu nombre</label><input id="pv-name" class="f-inp" placeholder="Nombre completo" value="${esc(_name)}" oninput="syncName()"></div>
+      ${hasFR?`<div class="f-row"><label class="f-lbl">Nombre del líder que evalúas</label><input id="pv-leader" class="f-inp" placeholder="Nombre completo del líder" value="${esc(_leader)}" oninput="syncLeader()"></div>`:''}
+    </div>
     ${sitHtml}
-    ${rbsNote}
     <div class="pv-foot">
       ${hasFR?`<div class="progress-txt">${answered} de 15 situaciones respondidas</div>`:''}
       <button class="pv-submit" onclick="submit()"${hasFR&&answered<15?' disabled':''}>Enviar evaluación</button>
@@ -137,12 +135,17 @@ function draw() {
 }
 
 let _name = '';
+let _leader = '';
+window.syncName   = function() { _name   = document.getElementById('pv-name')?.value||''; };
+window.syncLeader = function() { _leader = document.getElementById('pv-leader')?.value||''; draw(); };
 window.setAns = function(sid, v) { answers[sid]=v; _name=document.getElementById('pv-name')?.value||_name; draw(); };
 
 window.submit = async function() {
-  _name = document.getElementById('pv-name')?.value?.trim()||'';
+  _name   = document.getElementById('pv-name')?.value?.trim()||'';
+  _leader = document.getElementById('pv-leader')?.value?.trim()||'';
   if (!_name) { pvErr='Ingresa tu nombre para continuar.'; draw(); return; }
   const hasFR = (prog.instruments||[]).includes('fr-equipo');
+  if (hasFR && !_leader) { pvErr='Ingresa el nombre del líder que estás evaluando.'; draw(); return; }
   if (hasFR && Object.keys(answers).length < 15) { pvErr=`Completa las ${15-Object.keys(answers).length} situación(es) restante(s).`; draw(); return; }
   pvErr = '';
   try {
@@ -152,6 +155,7 @@ window.submit = async function() {
       body: JSON.stringify({
         program_id: pid,
         participant_name: _name,
+        leader_name: _leader,
         instrument: hasFR ? 'fr-equipo' : 'rbs',
         answers: hasFR ? {...answers} : {}
       })

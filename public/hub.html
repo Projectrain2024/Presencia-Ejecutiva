@@ -304,7 +304,7 @@ function renderDetail(pid) {
                   <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${ptlist.length}</span></div><div class="of">completaron</div></div>
                 </div>`).join('')}
           </div>
-          ${frResps.length>0?`<div style="margin-top:16px"><div class="det-col-ttl">F&R agregado · ${esc(prog.leader_name||prog.name)}</div>${buildChart(frResps)}</div>`:''}
+          ${frResps.length>0?`<div style="margin-top:16px"><div class="det-col-ttl">F&R agregado · ${esc(prog.name)}</div>${buildChart(frResps)}</div>`:''}
         </div>
         <div>
           <div class="det-col-ttl">Participantes</div>
@@ -391,26 +391,7 @@ function modalNewProg() {
       <div class="modal-hdr"><div class="modal-ttl">Nuevo programa</div><button class="modal-x" onclick="closeModal()">×</button></div>
       <div class="modal-body">
         <div class="f-row"><label class="f-lbl">Nombre del cliente *</label><input id="fn" class="f-inp" placeholder="Ej: Talma"></div>
-        <div class="f-row-2">
-          <div><label class="f-lbl">Código</label><input id="fc" class="f-inp" placeholder="PE-2026-001"></div>
-          <div><label class="f-lbl">Estado</label><select id="fst" class="f-inp"><option value="active">Activo</option><option value="pending">Por configurar</option></select></div>
-        </div>
-        <div class="f-row"><label class="f-lbl">Contexto / área</label><input id="fx" class="f-inp" placeholder="Ej: Operaciones Aeroportuarias"></div>
-        <div class="f-row"><label class="f-lbl">Nombre del líder (F&amp;R)</label><input id="fl" class="f-inp" placeholder="Nombre del líder que será evaluado"></div>
-        <div class="f-row-2">
-          <div><label class="f-lbl">Fecha de sesión</label><input id="fsd" class="f-inp" type="date"></div>
-          <div><label class="f-lbl">Fecha límite</label><input id="fd" class="f-inp" type="date"></div>
-        </div>
-        <div class="f-row">
-          <label class="f-lbl">Instrumentos</label>
-          <div class="instr-opts">
-            ${Object.entries(INSTRUMENTS).map(([k,v])=>`
-              <label class="instr-opt" id="io-${k}">
-                <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')">
-                <div><div class="instr-opt-lbl">${esc(v.label)}</div><div class="instr-opt-sub">${esc(v.desc)}</div></div>
-              </label>`).join('')}
-          </div>
-        </div>
+        <div class="f-row"><label class="f-lbl">Área / contexto</label><input id="fx" class="f-inp" placeholder="Ej: Operaciones Aeroportuarias"></div>
         <div class="modal-foot">
           <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
           <button class="btn btn-primary" onclick="saveProg()">Crear programa</button>
@@ -420,24 +401,16 @@ function modalNewProg() {
   </div>`;
 }
 
-function toggleOpt(k) {
-  const el = document.getElementById('io-' + k);
-  if (el) el.classList.toggle('on', document.getElementById('cb-' + k).checked);
-}
 
 async function saveProg() {
   const name = document.getElementById('fn')?.value?.trim();
   if (!name) { alert('El nombre del cliente es obligatorio.'); return; }
-  const instruments = Object.keys(INSTRUMENTS).filter(k => document.getElementById('cb-' + k)?.checked);
   try {
     const prog = await api('/api/programs', { method:'POST', body: JSON.stringify({
-      name, code: document.getElementById('fc')?.value?.trim()||'',
+      name,
       context: document.getElementById('fx')?.value?.trim()||'',
-      leader_name: document.getElementById('fl')?.value?.trim()||'',
-      status: document.getElementById('fst')?.value||'active',
-      session_date: document.getElementById('fsd')?.value||null,
-      deadline: document.getElementById('fd')?.value||null,
-      instruments
+      status: 'active',
+      instruments: ['fr-equipo']
     })});
     closeModal();
     selId = prog.id;
