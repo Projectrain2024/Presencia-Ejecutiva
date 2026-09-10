@@ -69,6 +69,16 @@ app.get('/api/programs/:id', requireAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+app.put('/api/programs/:id', requireAuth, async (req, res) => {
+  const { name } = req.body;
+  if (!name?.trim()) return res.status(400).json({ error: 'name requerido' });
+  try {
+    const prog = await db.updateProgram(req.params.id, req.body);
+    if (!prog) return res.status(404).json({ error: 'not found' });
+    res.json(prog);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 app.delete('/api/programs/:id', requireAuth, async (req, res) => {
   try { await db.deleteProgram(req.params.id); res.json({ ok: true }); }
   catch(e) { res.status(500).json({ error: e.message }); }

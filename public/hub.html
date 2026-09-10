@@ -132,6 +132,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .instr-opt input{accent-color:var(--pu-mid);width:15px;height:15px;cursor:pointer;flex-shrink:0}
 .instr-opt-lbl{font-size:13px;font-weight:500}
 .instr-opt-sub{font-size:11px;color:var(--tx2)}
+.instr-opt-wrap{display:flex;flex-direction:column}
+.instr-dates{padding:0 2px}
+.instr-dates.hidden{display:none}
 .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--pu-border)}
 /* Toast */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1C0D36;color:#fff;padding:9px 18px;border-radius:9px;font-size:13px;font-weight:500;z-index:200;opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap}
@@ -199,6 +202,18 @@ const INSTRUMENTS = {
   'fr-equipo': { label:'French & Raven · Equipo', tag:'ra', desc:'Los miembros del equipo evalúan al líder — anónimo' },
   'rbs':       { label:'Reflected Best Self',      tag:'rb', desc:'Reflexión de fortalezas con ayuda de la red' }
 };
+
+/* Normaliza instruments: acepta string[] (legado) u objeto[] con {key,start_date,end_date} */
+function instrList(raw) {
+  return (raw||[]).map(i => {
+    const key = typeof i === 'string' ? i : i.key;
+    const meta = INSTRUMENTS[key];
+    if (!meta) return null;
+    return { key, ...meta, start_date: i.start_date||null, end_date: i.end_date||null };
+  }).filter(Boolean);
+}
+
+function fmtDateShort(d) { return d ? new Date(d+'T12:00:00').toLocaleDateString('es-CO',{day:'numeric',month:'short',year:'numeric'}) : ''; }
 const BASE_CLR = { Experto:'#7B3FA8', Referente:'#E9A020', Legítimo:'#2A9D5C', Recompensa:'#1A6A8A', Coercitivo:'#C0392B', Informacional:'#8E44AD' };
 const BASE_SIT = { Experto:['s1','s2','s3'], Referente:['s4','s5','s6'], Legítimo:['s7','s8','s9'], Recompensa:['s10','s11'], Coercitivo:['s12','s13'], Informacional:['s14','s15'] };
 
@@ -252,7 +267,7 @@ function renderCard(p) {
   const parts = d?.participants?.length || 0;
   const resps = d?.responses?.length || 0;
   const pct   = parts > 0 ? Math.round(resps/parts*100) : 0;
-  const instrs = (p.instruments||[]).map(k=>INSTRUMENTS[k]).filter(Boolean);
+  const instrs = instrList(p.instruments);
   return `<div class="card${selId===p.id?' sel':''}" onclick="selectProg('${esc(p.id)}')">
     <div class="card-hdr">
       <div><div class="card-client">${esc(p.name)}</div><div class="card-code">${esc(p.code||'')}${p.context?' · '+esc(p.context):''}</div></div>
@@ -271,7 +286,7 @@ function renderDetail(pid) {
   if (!prog || !d) return '';
   const ptlist  = d.participants || [];
   const rlist   = d.responses   || [];
-  const instrs  = (prog.instruments||[]).map(k=>({key:k,...INSTRUMENTS[k]})).filter(x=>x.label);
+  const instrs  = instrList(prog.instruments);
   const frResps = rlist.filter(r => r.instrument==='fr-equipo' && r.answers && Object.keys(r.answers).length>0);
   const instrCounts = {};
   instrs.forEach(i => { instrCounts[i.key] = rlist.filter(r=>r.instrument===i.key).length; });
@@ -284,6 +299,10 @@ function renderDetail(pid) {
         <button class="btn-w" onclick="copyLink('${esc(link)}')">
           <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"/></svg>
           Copiar link
+        </button>
+        <button class="btn-w" onclick="openModal('edit-prog')">
+          <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+          Editar
         </button>
         <button class="btn-gld" onclick="openModal('add-part')">
           <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
@@ -300,7 +319,10 @@ function renderDetail(pid) {
             ${instrs.length===0
               ? `<div style="font-size:13px;color:var(--tx2)">Sin instrumentos configurados.</div>`
               : instrs.map(i=>`<div class="irow">
-                  <div class="irow-info"><div class="idot ${i.tag}"></div><div><div class="irow-name">${esc(i.label)}</div><div class="irow-type">${esc(i.desc)}</div></div></div>
+                  <div class="irow-info"><div class="idot ${i.tag}"></div><div>
+                    <div class="irow-name">${esc(i.label)}</div>
+                    <div class="irow-type">${esc(i.desc)}${i.start_date?` · <strong>${fmtDateShort(i.start_date)}</strong>${i.end_date?` → ${fmtDateShort(i.end_date)}`:''}`:''}</div>
+                  </div></div>
                   <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${ptlist.length}</span></div><div class="of">completaron</div></div>
                 </div>`).join('')}
           </div>
@@ -382,7 +404,34 @@ function renderModal() {
   if (!root) return;
   if (!modal) { root.innerHTML = ''; return; }
   if (modal === 'new-prog')  root.innerHTML = modalNewProg();
+  if (modal === 'edit-prog') root.innerHTML = modalEditProg();
   if (modal === 'add-part')  root.innerHTML = modalAddPart();
+}
+
+function instrFormRows(currentInstruments) {
+  /* currentInstruments: array of {key,start_date,end_date} or null for new */
+  const cur = {};
+  (currentInstruments||[]).forEach(i => {
+    const key = typeof i === 'string' ? i : i.key;
+    cur[key] = typeof i === 'string' ? {} : i;
+  });
+  return Object.entries(INSTRUMENTS).map(([k,v]) => {
+    const checked = !!cur[k];
+    const sd = cur[k]?.start_date||'';
+    const ed = cur[k]?.end_date||'';
+    return `<div class="instr-opt-wrap" id="iow-${k}">
+      <label class="instr-opt${checked?' on':''}" id="io-${k}">
+        <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')"${checked?' checked':''}>
+        <div><div class="instr-opt-lbl">${esc(v.label)}</div><div class="instr-opt-sub">${esc(v.desc)}</div></div>
+      </label>
+      <div class="instr-dates${checked?'':' hidden'}" id="id-${k}">
+        <div class="f-row-2" style="margin-top:6px;padding-left:4px">
+          <div><label class="f-lbl" style="font-size:10px">Inicio</label><input id="sd-${k}" class="f-inp" type="date" value="${sd}"></div>
+          <div><label class="f-lbl" style="font-size:10px">Cierre</label><input id="ed-${k}" class="f-inp" type="date" value="${ed}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function modalNewProg() {
@@ -392,16 +441,7 @@ function modalNewProg() {
       <div class="modal-body">
         <div class="f-row"><label class="f-lbl">Nombre del cliente *</label><input id="fn" class="f-inp" placeholder="Ej: Talma"></div>
         <div class="f-row"><label class="f-lbl">Área / contexto</label><input id="fx" class="f-inp" placeholder="Ej: Operaciones Aeroportuarias"></div>
-        <div class="f-row">
-          <label class="f-lbl">Instrumentos *</label>
-          <div class="instr-opts">
-            ${Object.entries(INSTRUMENTS).map(([k,v])=>`
-              <label class="instr-opt" id="io-${k}">
-                <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')">
-                <div><div class="instr-opt-lbl">${esc(v.label)}</div><div class="instr-opt-sub">${esc(v.desc)}</div></div>
-              </label>`).join('')}
-          </div>
-        </div>
+        <div class="f-row"><label class="f-lbl">Instrumentos *</label><div class="instr-opts">${instrFormRows(null)}</div></div>
         <div class="modal-foot">
           <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
           <button class="btn btn-primary" onclick="saveProg()">Crear programa</button>
@@ -411,16 +451,48 @@ function modalNewProg() {
   </div>`;
 }
 
+function modalEditProg() {
+  if (!selId) return '';
+  const prog = programs.find(p => p.id === selId);
+  if (!prog) return '';
+  return `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-hdr"><div class="modal-ttl">Editar programa</div><button class="modal-x" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <div class="f-row"><label class="f-lbl">Nombre del cliente *</label><input id="fn" class="f-inp" value="${esc(prog.name)}" placeholder="Ej: Talma"></div>
+        <div class="f-row"><label class="f-lbl">Área / contexto</label><input id="fx" class="f-inp" value="${esc(prog.context||'')}" placeholder="Ej: Operaciones Aeroportuarias"></div>
+        <div class="f-row"><label class="f-lbl">Instrumentos</label><div class="instr-opts">${instrFormRows(prog.instruments)}</div></div>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-primary" onclick="updateProg('${esc(selId)}')">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 
 function toggleOpt(k) {
-  const el = document.getElementById('io-' + k);
-  if (el) el.classList.toggle('on', document.getElementById('cb-' + k).checked);
+  const checked = document.getElementById('cb-' + k)?.checked;
+  document.getElementById('io-' + k)?.classList.toggle('on', checked);
+  const dates = document.getElementById('id-' + k);
+  if (dates) dates.classList.toggle('hidden', !checked);
+}
+
+function collectInstruments() {
+  return Object.keys(INSTRUMENTS)
+    .filter(k => document.getElementById('cb-' + k)?.checked)
+    .map(k => ({
+      key: k,
+      start_date: document.getElementById('sd-' + k)?.value||null,
+      end_date:   document.getElementById('ed-' + k)?.value||null,
+    }));
 }
 
 async function saveProg() {
   const name = document.getElementById('fn')?.value?.trim();
   if (!name) { alert('El nombre del cliente es obligatorio.'); return; }
-  const instruments = Object.keys(INSTRUMENTS).filter(k => document.getElementById('cb-' + k)?.checked);
+  const instruments = collectInstruments();
   if (!instruments.length) { alert('Selecciona al menos un instrumento.'); return; }
   try {
     const prog = await api('/api/programs', { method:'POST', body: JSON.stringify({
@@ -435,6 +507,25 @@ async function saveProg() {
     detailData[prog.id] = await api('/api/programs/' + prog.id);
     render();
     showToast('✓ Programa creado');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function updateProg(id) {
+  const name = document.getElementById('fn')?.value?.trim();
+  if (!name) { alert('El nombre del cliente es obligatorio.'); return; }
+  const instruments = collectInstruments();
+  if (!instruments.length) { alert('Selecciona al menos un instrumento.'); return; }
+  try {
+    await api('/api/programs/' + id, { method:'PUT', body: JSON.stringify({
+      name,
+      context: document.getElementById('fx')?.value?.trim()||'',
+      instruments
+    })});
+    closeModal();
+    await loadPrograms();
+    detailData[id] = await api('/api/programs/' + id);
+    render();
+    showToast('✓ Programa actualizado');
   } catch(e) { alert('Error: ' + e.message); }
 }
 
