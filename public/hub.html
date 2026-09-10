@@ -392,6 +392,16 @@ function modalNewProg() {
       <div class="modal-body">
         <div class="f-row"><label class="f-lbl">Nombre del cliente *</label><input id="fn" class="f-inp" placeholder="Ej: Talma"></div>
         <div class="f-row"><label class="f-lbl">Área / contexto</label><input id="fx" class="f-inp" placeholder="Ej: Operaciones Aeroportuarias"></div>
+        <div class="f-row">
+          <label class="f-lbl">Instrumentos *</label>
+          <div class="instr-opts">
+            ${Object.entries(INSTRUMENTS).map(([k,v])=>`
+              <label class="instr-opt" id="io-${k}">
+                <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')">
+                <div><div class="instr-opt-lbl">${esc(v.label)}</div><div class="instr-opt-sub">${esc(v.desc)}</div></div>
+              </label>`).join('')}
+          </div>
+        </div>
         <div class="modal-foot">
           <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
           <button class="btn btn-primary" onclick="saveProg()">Crear programa</button>
@@ -402,15 +412,22 @@ function modalNewProg() {
 }
 
 
+function toggleOpt(k) {
+  const el = document.getElementById('io-' + k);
+  if (el) el.classList.toggle('on', document.getElementById('cb-' + k).checked);
+}
+
 async function saveProg() {
   const name = document.getElementById('fn')?.value?.trim();
   if (!name) { alert('El nombre del cliente es obligatorio.'); return; }
+  const instruments = Object.keys(INSTRUMENTS).filter(k => document.getElementById('cb-' + k)?.checked);
+  if (!instruments.length) { alert('Selecciona al menos un instrumento.'); return; }
   try {
     const prog = await api('/api/programs', { method:'POST', body: JSON.stringify({
       name,
       context: document.getElementById('fx')?.value?.trim()||'',
       status: 'active',
-      instruments: ['fr-equipo']
+      instruments
     })});
     closeModal();
     selId = prog.id;
