@@ -30,11 +30,12 @@ async function pgInit() {
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
   });
+
+  // Crear tablas si no existen (nunca las borra)
   await pool.query(`
     CREATE TABLE IF NOT EXISTS programs (
       id          VARCHAR(32)  PRIMARY KEY,
       name        VARCHAR(200) NOT NULL,
-      sector      VARCHAR(200),
       code        VARCHAR(100),
       context     VARCHAR(200),
       leader_name VARCHAR(200),
@@ -62,32 +63,74 @@ async function pgInit() {
     CREATE INDEX IF NOT EXISTS idx_participants_program ON participants(program_id);
     CREATE INDEX IF NOT EXISTS idx_responses_program    ON responses(program_id);
   `);
+
+  // Migraciones aditivas: agregar columnas nuevas sin tocar datos existentes
+  const migrations = [
+    `ALTER TABLE programs ADD COLUMN IF NOT EXISTS sector VARCHAR(200)`,
+  ];
+  for (const sql of migrations) {
+    await pool.query(sql);
+  }
+
   console.log('✓ PostgreSQL ready');
 }
 
 /* ═══════════════════════════════════════════════════════
    JSON FILE MODE (local development)
 ═══════════════════════════════════════════════════════ */
-const DATA_DIR  = path.join(__dirname, 'data');
-const DB_FILE   = path.join(DATA_DIR, 'db.json');
+const DATA_DIR   = path.join(__dirname, 'data');
+const DB_FILE    = path.join(DATA_DIR, 'db.json');
+const DB_TMP     = path.join(DATA_DIR, 'db.json.tmp');
+const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+const MAX_BACKUPS = 10;
 
 function loadJson() {
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-  } catch {
-    return { programs: {}, participants: {}, responses: {} };
+  // Intenta el archivo principal; si falla, intenta el tmp (escritura interrumpida)
+  for (const f of [DB_FILE, DB_TMP]) {
+    try {
+      const raw = fs.readFileSync(f, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch {}
   }
+  return { programs: {}, participants: {}, responses: {} };
 }
 
 function saveJson(data) {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+
+  const json = JSON.stringify(data, null, 2);
+
+  // 1. Escribir en archivo temporal primero (evita corrupción si el proceso muere a mitad)
+  fs.writeFileSync(DB_TMP, json);
+
+  // 2. Guardar backup rotativo antes de sobreescribir el principal
+  if (fs.existsSync(DB_FILE)) {
+    if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    fs.copyFileSync(DB_FILE, path.join(BACKUP_DIR, `db-${stamp}.json`));
+
+    // Mantener solo los últimos MAX_BACKUPS backups
+    const backups = fs.readdirSync(BACKUP_DIR)
+      .filter(f => f.startsWith('db-') && f.endsWith('.json'))
+      .sort();
+    while (backups.length > MAX_BACKUPS) {
+      fs.unlinkSync(path.join(BACKUP_DIR, backups.shift()));
+    }
+  }
+
+  // 3. Reemplazar el archivo principal de forma atómica
+  fs.renameSync(DB_TMP, DB_FILE);
 }
 
 function jsonInit() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(DB_FILE)) saveJson({ programs: {}, participants: {}, responses: {} });
+  if (!fs.existsSync(DB_FILE)) {
+    saveJson({ programs: {}, participants: {}, responses: {} });
+  }
   console.log('✓ JSON file store ready (local mode) →', DB_FILE);
+  const bkCount = fs.existsSync(BACKUP_DIR) ? fs.readdirSync(BACKUP_DIR).length : 0;
+  if (bkCount > 0) console.log(`   ${bkCount} backup${bkCount!==1?'s':''} en data/backups/`);
 }
 
 /* ═══════════════════════════════════════════════════════
