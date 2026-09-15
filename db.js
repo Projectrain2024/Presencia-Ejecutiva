@@ -34,6 +34,7 @@ async function pgInit() {
     CREATE TABLE IF NOT EXISTS programs (
       id          VARCHAR(32)  PRIMARY KEY,
       name        VARCHAR(200) NOT NULL,
+      sector      VARCHAR(200),
       code        VARCHAR(100),
       context     VARCHAR(200),
       leader_name VARCHAR(200),
@@ -114,15 +115,15 @@ const db = {
   async createProgram(id, fields) {
     if (USE_PG) {
       const { rows } = await pgQuery(
-        `INSERT INTO programs (id,name,context,status,instruments)
-         VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-        [id, fields.name, fields.context||null,
+        `INSERT INTO programs (id,name,sector,context,status,instruments)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+        [id, fields.name, fields.sector||null, fields.context||null,
          fields.status||'active', JSON.stringify(fields.instruments||[])]
       );
       return rows[0];
     }
     const data = loadJson();
-    const row = { id, name: fields.name, context: fields.context||'', status: fields.status||'active', instruments: fields.instruments||[], created_at: new Date().toISOString() };
+    const row = { id, name: fields.name, sector: fields.sector||'', context: fields.context||'', status: fields.status||'active', instruments: fields.instruments||[], created_at: new Date().toISOString() };
     data.programs[id] = row;
     saveJson(data);
     return row;
@@ -131,14 +132,14 @@ const db = {
   async updateProgram(id, fields) {
     if (USE_PG) {
       const { rows } = await pgQuery(
-        `UPDATE programs SET name=$2, context=$3, instruments=$4 WHERE id=$1 RETURNING *`,
-        [id, fields.name, fields.context||null, JSON.stringify(fields.instruments||[])]
+        `UPDATE programs SET name=$2, sector=$3, context=$4, instruments=$5 WHERE id=$1 RETURNING *`,
+        [id, fields.name, fields.sector||null, fields.context||null, JSON.stringify(fields.instruments||[])]
       );
       return rows[0];
     }
     const data = loadJson();
     if (!data.programs[id]) throw new Error('Programa no encontrado');
-    data.programs[id] = { ...data.programs[id], name: fields.name, context: fields.context||'', instruments: fields.instruments||[] };
+    data.programs[id] = { ...data.programs[id], name: fields.name, sector: fields.sector||'', context: fields.context||'', instruments: fields.instruments||[] };
     saveJson(data);
     return data.programs[id];
   },

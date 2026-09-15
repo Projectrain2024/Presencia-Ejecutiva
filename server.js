@@ -48,6 +48,9 @@ app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/login'
 app.get('/p/:programId', (_, res) =>
   res.sendFile(path.join(__dirname, 'public', 'participant.html')));
 
+app.get('/p/:programId/:instrument', (_, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'participant.html')));
+
 /* ── API: Programs ──────────────────────────────────── */
 app.get('/api/programs', requireAuth, async (req, res) => {
   try { res.json(await db.getPrograms()); }
@@ -116,6 +119,65 @@ app.post('/api/responses', async (req, res) => {
     const row = await db.addResponse(nanoid(24), program_id, participant_name.trim(), leader_name?.trim()||'', instrument, answers);
     res.json(row);
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+/* ── API: Invitations ───────────────────────────────────── */
+app.post('/api/invite', requireAuth, async (req, res) => {
+  const { emails, instrument, program_name, link } = req.body;
+  if (!emails?.length || !link) return res.status(400).json({ error: 'Faltan campos' });
+
+  const SMTP_HOST = process.env.SMTP_HOST;
+  const SMTP_USER = process.env.SMTP_USER;
+  const SMTP_PASS = process.env.SMTP_PASS;
+  const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
+
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) {
+    return res.json({ ok: false, mailto: true });
+  }
+
+  try {
+    const nodemailer = require('nodemailer');
+    const transport = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+
+    const instrLabel = instrument === 'fr-equipo' ? 'French & Raven · Equipo' : 'Reflected Best Self';
+    const subject = `Invitación a evaluación: ${program_name}`;
+    const html = `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1C0D36">
+        <div style="background:linear-gradient(135deg,#3A1259,#5A2090);padding:28px 32px;border-radius:12px 12px 0 0">
+          <div style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:6px">LHH · Presencia Ejecutiva</div>
+          <div style="font-family:Georgia,serif;font-size:22px;color:#fff">${program_name}</div>
+        </div>
+        <div style="background:#fff;border:1px solid #D4C0E8;border-top:none;border-radius:0 0 12px 12px;padding:28px 32px">
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px">Hola,</p>
+          <p style="font-size:14px;line-height:1.65;color:#4A3560;margin:0 0 20px">
+            Te invitamos a completar la evaluación <strong>${instrLabel}</strong> del programa <strong>${program_name}</strong>.
+            ${instrument === 'fr-equipo' ? 'Tu respuesta es completamente anónima.' : ''}
+          </p>
+          <div style="text-align:center;margin:24px 0">
+            <a href="${link}" style="background:#E9A020;color:#1C0D36;text-decoration:none;font-weight:700;font-size:14px;padding:13px 28px;border-radius:9px;display:inline-block">
+              Comenzar evaluación →
+            </a>
+          </div>
+          <p style="font-size:12px;color:#8B6FAA;margin:0">Si el botón no funciona, copia este enlace:<br>
+            <a href="${link}" style="color:#7B3FA8">${link}</a>
+          </p>
+        </div>
+      </div>`;
+
+    const results = await Promise.allSettled(
+      emails.map(to => transport.sendMail({ from: SMTP_FROM, to, subject, html }))
+    );
+    const sent = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    res.json({ ok: true, sent, failed });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 /* ── Start ──────────────────────────────────────────── */

@@ -5,168 +5,419 @@
 <title>Evaluación — LHH Presencia Ejecutiva</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap">
 <style>
-:root{--pu:#3A1259;--pu-mid:#7B3FA8;--gold:#E9A020;--bg:#F6F1FC;--card:#fff;--tx:#1C0D36;--tx2:#6B547E;--border:#D4C0E8;--ok:#1A7A45}
+:root{
+  --pu:#3A1259;--pu-mid:#7B3FA8;--gold:#E9A020;
+  --bg:#F6F1FC;--card:#fff;--tx:#1C0D36;--tx2:#6B547E;--border:#D4C0E8;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1A0D2E;--card:#241040;--tx:#EDE0FF;--tx2:#9B7EC8;--border:#3D2460;
+}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px}
-.brand{font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-mid);margin-bottom:20px}
-.pv-card{background:var(--card);border:1px solid var(--border);border-radius:13px;width:100%;max-width:620px;overflow:hidden}
-.pv-hdr{background:linear-gradient(135deg,var(--pu),#5A2090);padding:22px 26px}
-.pv-ttl{font-family:'Playfair Display',serif;font-size:20px;color:#fff;margin-bottom:3px}
-.pv-sub{font-size:12px;color:rgba(255,255,255,.65)}
-.pv-intro{padding:18px 26px 0;font-size:13px;color:var(--tx2);line-height:1.65}
-.pv-intro strong{color:var(--tx)}
-.name-wrap{padding:18px 26px 0}
-.f-lbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:5px}
-.f-inp{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13.5px;color:var(--tx);background:var(--bg);outline:none;transition:border-color .14s}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px}
+.brand{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--pu-mid);margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:640px;overflow:hidden}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,var(--pu),#5A2090);padding:26px 28px}
+.hdr-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px}
+.hdr-ttl{font-family:'Playfair Display',serif;font-size:24px;color:#fff;line-height:1.2;margin-bottom:6px}
+.hdr-ttl em{font-style:italic}
+.hdr-sub{font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.5}
+
+/* Progress */
+.prog-bar{height:3px;background:rgba(255,255,255,.18)}
+.prog-fill{height:100%;background:var(--gold);transition:width .35s ease;border-radius:0 2px 2px 0}
+
+/* Intro */
+.intro-body{padding:28px}
+.intro-txt{font-size:14px;color:var(--tx2);line-height:1.7;margin-bottom:24px}
+.anon-notice{display:flex;align-items:flex-start;gap:10px;background:rgba(123,63,168,.08);border:1px solid rgba(123,63,168,.2);border-radius:9px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--tx2);line-height:1.5}
+.anon-notice svg{flex-shrink:0;margin-top:1px}
+.f-lbl{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);display:block;margin-bottom:6px}
+.f-inp{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:14px;color:var(--tx);background:var(--bg);outline:none;transition:border-color .14s}
 .f-inp:focus{border-color:var(--pu-mid)}
-.sit-list{padding:16px 26px 0;display:flex;flex-direction:column;gap:13px}
-.sit{border:1px solid var(--border);border-radius:9px;padding:13px 15px}
-.sit-num{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);margin-bottom:3px}
-.sit-txt{font-size:13px;line-height:1.55;margin-bottom:10px}
-.sit-scale{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.scale-lbl{font-size:10px;color:var(--tx2);flex-shrink:0}
-.scale-btns{display:flex;gap:5px}
-.sb{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:var(--bg);color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;transition:all .13s;display:flex;align-items:center;justify-content:center;font-family:inherit}
-.sb:hover{border-color:var(--pu-mid);color:var(--pu-mid)}
-.sb.on{background:var(--pu-mid);border-color:var(--pu-mid);color:#fff}
-.pv-foot{padding:18px 26px 28px}
-.progress-txt{font-size:12px;color:var(--tx2);margin-bottom:10px}
-.pv-submit{width:100%;padding:13px;background:var(--gold);color:#1C0D36;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:opacity .13s}
-.pv-submit:hover{opacity:.88}
-.pv-submit:disabled{opacity:.4;cursor:not-allowed}
-.pv-err{font-size:12px;color:#C0392B;margin-top:8px;text-align:center}
-.ty{text-align:center;padding:44px 26px}
-.ty-icon{font-size:46px;margin-bottom:14px}
-.ty-ttl{font-family:'Playfair Display',serif;font-size:21px;margin-bottom:8px}
-.ty-sub{font-size:13.5px;color:var(--tx2);line-height:1.6}
+.btn-start{margin-top:20px;width:100%;padding:14px;background:var(--gold);color:#1C0D36;border:none;border-radius:9px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .13s}
+.btn-start:hover{opacity:.88}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+
+/* Question */
+.q-body{padding:28px}
+.q-counter{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx2);margin-bottom:12px}
+.q-text{font-size:16px;font-weight:500;line-height:1.55;margin-bottom:22px;color:var(--tx)}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:flex-start;gap:12px;padding:12px 15px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .12s,background .12s;background:var(--bg)}
+.opt:hover{border-color:var(--pu-mid);background:var(--card)}
+.opt.sel{border-color:var(--pu-mid);background:var(--card)}
+.opt.sel .opt-letter{background:var(--pu-mid);color:#fff;border-color:var(--pu-mid)}
+.opt-letter{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--tx2);margin-top:1px;transition:all .12s}
+.opt-text{font-size:13.5px;line-height:1.5;color:var(--tx);padding-top:2px}
+.q-nav{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.btn-back{padding:10px 18px;background:none;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;color:var(--tx2);cursor:pointer}
+.btn-back:hover{border-color:var(--pu-mid)}
+.btn-next{padding:10px 22px;background:var(--pu-mid);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.btn-next:hover{opacity:.88}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+
+/* Results */
+.res-body{padding:28px}
+.res-ttl{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px}
+.res-sub{font-size:13px;color:var(--tx2);margin-bottom:22px}
+.res-chart{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.bar-row{display:grid;grid-template-columns:100px 1fr 28px;align-items:center;gap:9px}
+.bar-lbl{font-size:12px;font-weight:600;color:var(--tx);text-align:right}
+.bar-track{height:10px;background:var(--border);border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.bar-val{font-size:12px;font-weight:700;color:var(--tx2)}
+.dominant{margin-bottom:22px}
+.dom-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:6px}
+.dom-name{font-family:'Playfair Display',serif;font-size:22px;margin-bottom:8px}
+.dom-desc{font-size:13.5px;color:var(--tx2);line-height:1.65;margin-bottom:14px}
+.dom-reflect{list-style:none;display:flex;flex-direction:column;gap:7px}
+.dom-reflect li{font-size:13px;color:var(--tx2);padding-left:16px;position:relative;line-height:1.5}
+.dom-reflect li::before{content:'→';position:absolute;left:0;color:var(--pu-mid)}
+.dom-note{font-size:11.5px;font-style:italic;color:var(--tx2);border-left:3px solid var(--pu-mid);padding-left:10px;margin-top:12px;line-height:1.55}
+.il-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+@media(max-width:500px){.il-grid{grid-template-columns:1fr}}
+.il-box{border-radius:10px;padding:14px}
+.il-imp{background:#EBF9F0;border:1px solid #B7E4CB}
+.il-lim{background:#FEF0F0;border:1px solid #F5C0C0}
+.il-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.il-imp .il-title{color:#1E7A45}
+.il-lim .il-title{color:#B03030}
+.il-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.il-list li{font-size:12px;line-height:1.5;padding-left:14px;position:relative}
+.il-imp .il-list li{color:#1E6035}
+.il-lim .il-list li{color:#8B2020}
+.il-imp .il-list li::before{content:'↑';position:absolute;left:0;color:#1E7A45;font-weight:700}
+.il-lim .il-list li::before{content:'↓';position:absolute;left:0;color:#B03030;font-weight:700}
+.dom-chip{display:inline-block;background:rgba(123,63,168,.1);border:1px solid rgba(123,63,168,.25);color:var(--pu-mid);font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-bottom:10px}
+.btn-evaluar{margin-top:16px;width:100%;padding:12px;background:none;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:13px;font-weight:600;color:var(--tx2);cursor:pointer}
+.btn-evaluar:hover{border-color:var(--pu-mid);color:var(--pu-mid)}
 .spinner{text-align:center;padding:40px;color:var(--tx2);font-size:13px}
+.err-msg{font-size:12px;color:#C0392B;margin-top:8px}
 </style>
 </head>
 <body>
 
 <div class="brand">LHH · Presencia Ejecutiva</div>
-<div class="pv-card" id="card">
-  <div class="spinner">Cargando evaluación…</div>
-</div>
+<div class="card" id="card"><div class="spinner">Cargando…</div></div>
 
 <script>
-const FR_SIT = [
-  { id:'s1',  base:'Experto',       text:'Cuando [L] da instrucciones sobre cómo realizar una tarea, las sigo porque confío en su conocimiento técnico.' },
-  { id:'s2',  base:'Experto',       text:'Acepto las decisiones de [L] porque ha demostrado dominio del tema a lo largo del tiempo.' },
-  { id:'s3',  base:'Experto',       text:'Cuando [L] propone un enfoque diferente, lo considero seriamente porque sé que sabe de lo que habla.' },
-  { id:'s4',  base:'Referente',     text:'Me esfuerzo más cuando [L] está al tanto de mi trabajo, porque valoro su opinión sobre mí.' },
-  { id:'s5',  base:'Referente',     text:'La forma en que [L] enfrenta los retos me inspira a actuar de manera similar.' },
-  { id:'s6',  base:'Referente',     text:'Me identifico con los valores y la actitud de [L], lo que me lleva a alinearme con sus expectativas.' },
-  { id:'s7',  base:'Legítimo',      text:'Sigo las directrices de [L] porque su posición en la organización le da la autoridad para tomar esas decisiones.' },
-  { id:'s8',  base:'Legítimo',      text:'Aunque no siempre esté de acuerdo, respeto las decisiones de [L] porque su rol lo requiere.' },
-  { id:'s9',  base:'Legítimo',      text:'[L] tiene la autoridad formal para asignar responsabilidades y yo las acepto como parte del contrato organizacional.' },
-  { id:'s10', base:'Recompensa',    text:'Me esfuerzo por cumplir con lo que [L] espera porque sé que puede reconocer mi desempeño de formas que valoro.' },
-  { id:'s11', base:'Recompensa',    text:'La posibilidad de recibir reconocimiento o beneficios de parte de [L] me motiva a dar lo mejor de mí.' },
-  { id:'s12', base:'Coercitivo',    text:'Evito ciertas acciones porque sé que [L] tiene la capacidad de generar consecuencias si no cumplo.' },
-  { id:'s13', base:'Coercitivo',    text:'Hay situaciones en las que actúo de cierta manera simplemente para evitar conflictos o sanciones por parte de [L].' },
-  { id:'s14', base:'Informacional', text:'Confío en la información que [L] comparte porque sé que tiene acceso a datos relevantes que yo no tengo.' },
-  { id:'s15', base:'Informacional', text:'[L] me convence con argumentos y datos concretos, no solo con su posición o carisma.' },
+/* ── Bases de poder ─────────────────────────────────────── */
+const POWERS = {
+  coercitivo:    { label:'Coercitivo',    color:'#c0392b' },
+  recompensa:    { label:'Recompensa',    color:'#e67e22' },
+  legitimo:      { label:'Legítimo',      color:'#2980b9' },
+  experto:       { label:'Experto',       color:'#27ae60' },
+  referente:     { label:'Referente',     color:'#8e44ad' },
+  informacional: { label:'Informacional', color:'#16a085' },
+};
+
+const DESCRIPTIONS = {
+  coercitivo:    { desc:'Influye a través de la presión, la consecuencia o el miedo al castigo. Las personas le siguen para evitar resultados negativos.', reflection:['¿En qué momentos esta forma de liderar genera resultados y en cuáles genera resentimiento?','¿Qué impacto emocional tiene este estilo en el equipo?','¿Cómo se podría mantener el estándar sin recurrir a la presión?'], note:'Líderes con alta base coercitiva generan cumplimiento a corto plazo, pero erosionan la confianza y el compromiso.', impulsores:['Genera resultados rápidos en situaciones de crisis','Establece límites claros de comportamiento esperado','Detiene comportamientos dañinos para el equipo','Útil cuando hay urgencia real y el tiempo apremia'], limitantes:['Erosiona la confianza a largo plazo','Genera cumplimiento sin compromiso genuino','Aumenta la rotación y el resentimiento','Limita la creatividad y la iniciativa propia'] },
+  recompensa:    { desc:'Su influencia viene del control sobre incentivos: reconocimiento, ascensos, recursos o beneficios que otros desean.', reflection:['¿Qué pasa con la motivación cuando desaparecen los incentivos?','¿Cómo construye motivación intrínseca más allá del premio?','¿El equipo actúa por compromiso o por beneficio personal?'], note:'La base de recompensa es efectiva pero frágil: la motivación desaparece cuando los incentivos se agotan.', impulsores:['Motiva hacia metas concretas y medibles','Reconoce el desempeño de forma tangible','Alinea comportamientos con objetivos del negocio','Crea dinamismo cuando los incentivos están bien estructurados'], limitantes:['La motivación desaparece cuando se acaban los incentivos','Puede generar competencia desleal entre miembros','No construye compromiso intrínseco ni propósito','Las personas trabajan por el premio, no por convicción'] },
+  legitimo:      { desc:'Su poder viene del rol o título que ocupa. Las personas le siguen porque reconocen su autoridad formal dentro de la jerarquía.', reflection:['¿Qué tan fuerte sería la influencia de este líder fuera de su cargo?','¿Cómo construye autoridad más allá de la posición?','¿El equipo lo sigue porque quiere o porque debe?'], note:'El poder legítimo es necesario pero insuficiente. Los mejores líderes van más allá del título.', impulsores:['Genera claridad sobre quién decide y qué','Facilita el orden y la estructura en equipos','El equipo sabe a quién acudir ante situaciones críticas','Efectivo para establecer procesos y estándares'], limitantes:['El cumplimiento desaparece si el cargo cambia o se percibe como débil','No genera compromiso emocional ni motivación intrínseca','El equipo hace lo mínimo requerido, no lo máximo posible','Difícil de sostener en culturas que valoran la autonomía y la innovación'] },
+  experto:       { desc:'Influye porque otros perciben que tiene conocimiento, experiencia o habilidades superiores que necesitan.', reflection:['¿Comparte el conocimiento o lo usa como diferenciador de poder?','¿Cómo lidera cuando alguien sabe más que él/ella?','¿Su expertise abre espacios o crea distancia con el equipo?'], note:'El poder experto es muy valorado, pero puede limitar si el líder no aprende a distribuir el conocimiento.', impulsores:['Genera confianza por credibilidad técnica demostrada','Las personas siguen porque confían en el criterio','Acelera decisiones en contextos técnicos complejos','Muy valorado en equipos donde el conocimiento es crítico'], limitantes:['Puede crear dependencia en el líder para cada decisión','Limita el crecimiento del equipo si no comparte el saber','Difícil de mantener en campos de evolución rápida','Puede generar distancia si el expertise se usa como barrera'] },
+  referente:     { desc:'Su influencia nace de quién es: los valores que encarna, la confianza que inspira y la identificación que genera en otros.', reflection:['¿Cuáles son los valores que define con sus acciones, no con sus palabras?','¿Qué tan consistente es entre lo que dice y lo que hace?','¿Qué tipo de líder quieren ser las personas cuando le observan?'], note:'El poder referente es el más duradero y el más cercano a la presencia ejecutiva auténtica.', impulsores:['Genera influencia sin necesidad de cargo o incentivos','Las personas siguen por convicción, no por obligación','Construye equipos comprometidos y leales genuinamente','El impacto trasciende el tiempo y el cargo'], limitantes:['Toma tiempo construirse y se puede perder rápido','Requiere consistencia total entre el decir y el hacer','Difícil de mantener bajo alta presión sostenida','Un quiebre de confianza tiene un impacto muy profundo'] },
+  informacional: { desc:'Su poder viene del acceso, manejo y distribución estratégica de información relevante para otros.', reflection:['¿Usa la información para empoderar o para controlar?','¿Qué tan transparente es con el equipo?','¿Cómo impacta el flujo de información en la confianza organizacional?'], note:'El poder informacional puede empoderar equipos o crear dependencia, según cómo se gestione.', impulsores:['Empodera al equipo con contexto para decidir mejor','Genera credibilidad por transparencia y claridad','Facilita la coordinación y el alineamiento del equipo','Construye confianza cuando la información fluye abiertamente'], limitantes:['Puede convertirse en control si la información se retiene','Genera dependencia si el equipo no tiene acceso directo','Crea fricciones si la información se percibe como parcial','Difícil de sostener en organizaciones con alta opacidad'] },
+};
+
+/* ── Preguntas RBS (autoevaluación — líder se evalúa) ───── */
+const Q_RBS = [
+  { text:'Un miembro de tu equipo está incumpliendo consistentemente sus compromisos. ¿Cómo respondes?', options:[{text:'Le hago saber que hay consecuencias si esto continúa.',power:'coercitivo'},{text:'Ofrezco reconocimiento especial si mejora su desempeño.',power:'recompensa'},{text:'Le recuerdo que como líder necesito resultados del equipo.',power:'legitimo'},{text:'Comparto cómo yo resolvería el problema técnico que enfrenta.',power:'experto'},{text:'Tengo una conversación honesta sobre el impacto que tiene en el equipo.',power:'referente'},{text:'Le muestro datos concretos de cómo sus entregas afectan al resto.',power:'informacional'}] },
+  { text:'Necesitas que tu equipo adopte un nuevo proceso que genera resistencia. Tu primer movimiento es…', options:[{text:'Dejar claro que no es opcional y que espero cumplimiento.',power:'coercitivo'},{text:'Vincular el proceso a una meta o beneficio que les importe.',power:'recompensa'},{text:'Explicar que la dirección lo requiere y mi rol es implementarlo.',power:'legitimo'},{text:'Demostrar yo mismo cómo funciona y por qué es mejor.',power:'experto'},{text:'Involucrarlos en cómo implementarlo para que se sientan parte.',power:'referente'},{text:'Compartir los datos que justifican por qué este cambio es necesario.',power:'informacional'}] },
+  { text:'En una reunión de alta tensión, un colega desafía abiertamente tu decisión. Tú…', options:[{text:'Reafirmo mi posición con firmeza; mostrar vacilación no ayuda.',power:'coercitivo'},{text:'Sugiero que quien apoye la decisión tendrá visibilidad en el éxito.',power:'recompensa'},{text:'Recuerdo que la decisión final dentro de este alcance es mía.',power:'legitimo'},{text:'Argumento con evidencia y experiencia técnica por qué es correcta.',power:'experto'},{text:'Escucho genuinamente y busco entender qué preocupación hay detrás.',power:'referente'},{text:'Presento la información contextual que llevó a esta decisión.',power:'informacional'}] },
+  { text:'Alguien nuevo llega a tu equipo. ¿Cómo estableces tu influencia desde el inicio?', options:[{text:'Dejo claro desde el principio cuáles son mis estándares y expectativas.',power:'coercitivo'},{text:'Le muestro las oportunidades de crecimiento que puede tener.',power:'recompensa'},{text:'Le explico cómo funciona la estructura y cuál es mi rol.',power:'legitimo'},{text:'Comparto mi experiencia y los aprendizajes que tengo del área.',power:'experto'},{text:'Invierto tiempo en conocerle como persona antes de hablar de trabajo.',power:'referente'},{text:'Le doy contexto profundo sobre cómo funciona el negocio y el equipo.',power:'informacional'}] },
+  { text:'Tu equipo va a negociar con otro departamento. ¿Cómo preparas la conversación?', options:[{text:'Les digo que no cedo en ciertos puntos y que deben sostener la postura.',power:'coercitivo'},{text:'Identificamos qué tiene valor para la otra parte y lo usamos.',power:'recompensa'},{text:'Recordamos que tenemos autoridad formal sobre ese proceso.',power:'legitimo'},{text:'Preparo argumentos técnicos sólidos para respaldar nuestra posición.',power:'experto'},{text:'Los animo a construir relación antes de negociar el contenido.',power:'referente'},{text:'Recopilamos datos y precedentes para ir con la mejor información posible.',power:'informacional'}] },
+  { text:'Un proyecto importante está en riesgo. ¿Qué haces primero?', options:[{text:'Establezco que el fracaso no es una opción y pongo presión sobre plazos.',power:'coercitivo'},{text:'Prometo reconocimiento especial si el equipo da un esfuerzo extra.',power:'recompensa'},{text:'Como responsable del área, declaro el proyecto en estado crítico.',power:'legitimo'},{text:'Analizo el problema técnico y propongo una solución concreta.',power:'experto'},{text:'Hablo honestamente con el equipo sobre la situación y qué necesitamos.',power:'referente'},{text:'Reúno toda la información disponible para entender bien el problema.',power:'informacional'}] },
+  { text:'Alguien de tu equipo pide más autonomía. Tu respuesta es…', options:[{text:'Le aclaro que hay límites y que ciertos procesos no son negociables.',power:'coercitivo'},{text:'Le propongo autonomía progresiva ligada a resultados demostrados.',power:'recompensa'},{text:'Le explico los límites que impone el cargo y la política de la empresa.',power:'legitimo'},{text:'Le doy mi criterio sobre en qué áreas está listo y en cuáles no.',power:'experto'},{text:'Exploro con él/ella qué tipo de autonomía necesita y por qué.',power:'referente'},{text:'Le comparto los criterios que uso para evaluar la madurez de cada área.',power:'informacional'}] },
+  { text:'Cuando quieres motivar a tu equipo para dar lo mejor de sí, tú…', options:[{text:'Dejo claro qué pasa si los resultados no llegan.',power:'coercitivo'},{text:'Vinculo el esfuerzo con recompensas concretas y visibles.',power:'recompensa'},{text:'Recuerdo que cumplir con los objetivos es parte del rol.',power:'legitimo'},{text:'Comparto ejemplos y aprendizajes de cómo logré resultados similares.',power:'experto'},{text:'Conecto el trabajo con un propósito que va más allá del resultado.',power:'referente'},{text:'Les muestro el contexto completo: por qué este trabajo importa.',power:'informacional'}] },
+  { text:'Cuando cometes un error importante frente a tu equipo, ¿qué haces?', options:[{text:'Lo manejo con discreción; la autoridad requiere cierta imagen.',power:'coercitivo'},{text:'Lo corrijo rápidamente para mantener mi credibilidad.',power:'recompensa'},{text:'Actúo dentro de mi rol para resolver la situación formalmente.',power:'legitimo'},{text:'Analizo qué salió mal y comparto el aprendizaje técnico.',power:'experto'},{text:'Lo reconozco abiertamente y lo uso como ejemplo de aprendizaje.',power:'referente'},{text:'Documento lo que falló y lo comparto con el equipo como información útil.',power:'informacional'}] },
+  { text:'Tienes que comunicar malas noticias al equipo. ¿Cómo lo haces?', options:[{text:'Soy directo y establezco expectativas claras sobre qué se requiere ahora.',power:'coercitivo'},{text:'Busco la forma de enmarcar las noticias con algún incentivo futuro.',power:'recompensa'},{text:'Las comunico como parte de mi responsabilidad como líder del área.',power:'legitimo'},{text:'Explico con rigor el análisis detrás de la situación.',power:'experto'},{text:'Las digo con honestidad y me quedo presente para contener la reacción.',power:'referente'},{text:'Doy todo el contexto posible para que entiendan por qué llegamos aquí.',power:'informacional'}] },
+  { text:'Cuando alguien de tu equipo sobresale, ¿cómo lo reconoces?', options:[{text:'Espero que sea la norma; reconocer demasiado puede bajar el estándar.',power:'coercitivo'},{text:'Lo recompenso con algo tangible: bono, día libre, visibilidad.',power:'recompensa'},{text:'Lo menciono en el foro formal correspondiente.',power:'legitimo'},{text:'Le doy feedback experto sobre qué hizo bien y cómo puede crecer.',power:'experto'},{text:'Lo reconozco genuinamente, en privado y en público, por lo que es.',power:'referente'},{text:'Comparto sus logros con el equipo para que aprendan de su enfoque.',power:'informacional'}] },
+  { text:'En una conversación difícil con alguien que no rinde, tú…', options:[{text:'Soy claro en que si no hay cambio, habrá consecuencias concretas.',power:'coercitivo'},{text:'Ofrezco apoyo o incentivos si mejora en un plazo determinado.',power:'recompensa'},{text:'Lo enmarco como una conversación formal de desempeño.',power:'legitimo'},{text:'Diagnostico qué competencias le faltan y propongo un plan.',power:'experto'},{text:'Primero entiendo qué está pasando en su vida o motivación.',power:'referente'},{text:'Presento datos concretos de su desempeño para que vea la situación.',power:'informacional'}] },
+  { text:'Cuando defines la dirección estratégica de tu área, ¿cómo construyes alineación?', options:[{text:'Comunico la dirección y espero que el equipo se alinee.',power:'coercitivo'},{text:'Vinculo la estrategia con beneficios individuales para cada persona.',power:'recompensa'},{text:'La presento como la visión oficial que deben ejecutar.',power:'legitimo'},{text:'Comparto el análisis detallado que sustenta la dirección.',power:'experto'},{text:'La co-construyo con el equipo para que sea suya también.',power:'referente'},{text:'Muestro la información de mercado y negocio que llevó a esa decisión.',power:'informacional'}] },
+  { text:'Alguien de otro nivel jerárquico intenta socavar tu autoridad. Tú…', options:[{text:'Respondo de forma contundente para que quede claro quién decide aquí.',power:'coercitivo'},{text:'Busco ganar su apoyo ofreciendo algo que le interese.',power:'recompensa'},{text:'Defiendo mi ámbito de autoridad formal con claridad.',power:'legitimo'},{text:'Demuestro con argumentos técnicos por qué mi criterio es el correcto.',power:'experto'},{text:'Busco una conversación directa para entender qué hay detrás.',power:'referente'},{text:'Presento la evidencia y contexto que justifican mis decisiones.',power:'informacional'}] },
+  { text:'Si tuvieras que describir en qué se basa principalmente tu influencia como líder, dirías…', options:[{text:'En que las personas saben que tengo la autoridad para exigir.',power:'coercitivo'},{text:'En que puedo abrir puertas y dar reconocimiento a quienes se destacan.',power:'recompensa'},{text:'En el rol que ocupo y las responsabilidades que tengo asignadas.',power:'legitimo'},{text:'En mi conocimiento, experiencia y juicio sobre el trabajo.',power:'experto'},{text:'En quién soy, los valores que vivo y la confianza que genero.',power:'referente'},{text:'En que manejo y comparto información relevante que otros necesitan.',power:'informacional'}] },
 ];
 
-function esc(s){ const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML }
+/* ── Preguntas FR-EQUIPO (360° — equipo evalúa al líder) ── */
+const Q_FR = [
+  { text:'Un miembro del equipo está incumpliendo consistentemente sus compromisos. ¿Cómo responde tu líder?', options:[{text:'Le hace saber que hay consecuencias si esto continúa.',power:'coercitivo'},{text:'Ofrece reconocimiento especial si mejora su desempeño.',power:'recompensa'},{text:'Le recuerda que como líder necesita resultados del equipo.',power:'legitimo'},{text:'Comparte cómo él/ella resolvería el problema técnico que enfrenta.',power:'experto'},{text:'Tiene una conversación honesta sobre el impacto que tiene en el equipo.',power:'referente'},{text:'Le muestra datos concretos de cómo sus entregas afectan al resto.',power:'informacional'}] },
+  { text:'El equipo necesita adoptar un nuevo proceso que genera resistencia. El primer movimiento de tu líder es…', options:[{text:'Dejar claro que no es opcional y esperar cumplimiento.',power:'coercitivo'},{text:'Vincular el proceso a una meta o beneficio que les importa.',power:'recompensa'},{text:'Explicar que la dirección lo requiere y su rol es implementarlo.',power:'legitimo'},{text:'Demostrar él/ella mismo cómo funciona y por qué es mejor.',power:'experto'},{text:'Involucrar al equipo en cómo implementarlo para que se sientan parte.',power:'referente'},{text:'Compartir los datos que justifican por qué este cambio es necesario.',power:'informacional'}] },
+  { text:'En una reunión de alta tensión, alguien desafía abiertamente la decisión de tu líder. Él/ella…', options:[{text:'Reafirma su posición con firmeza; mostrar vacilación no ayuda.',power:'coercitivo'},{text:'Sugiere que quien apoye la decisión tendrá visibilidad en el éxito.',power:'recompensa'},{text:'Recuerda que la decisión final dentro de ese alcance es suya.',power:'legitimo'},{text:'Argumenta con evidencia y experiencia técnica por qué es correcta.',power:'experto'},{text:'Escucha genuinamente y busca entender qué preocupación hay detrás.',power:'referente'},{text:'Presenta la información contextual que llevó a esa decisión.',power:'informacional'}] },
+  { text:'Cuando alguien nuevo llega al equipo, ¿cómo establece tu líder su influencia desde el inicio?', options:[{text:'Deja claro desde el principio cuáles son sus estándares y expectativas.',power:'coercitivo'},{text:'Le muestra las oportunidades de crecimiento que puede tener.',power:'recompensa'},{text:'Le explica cómo funciona la estructura y cuál es su rol.',power:'legitimo'},{text:'Comparte su experiencia y los aprendizajes que tiene del área.',power:'experto'},{text:'Invierte tiempo en conocerle como persona antes de hablar de trabajo.',power:'referente'},{text:'Le da contexto profundo sobre cómo funciona el negocio y el equipo.',power:'informacional'}] },
+  { text:'El equipo va a negociar con otro departamento. ¿Cómo prepara tu líder la conversación?', options:[{text:'Les dice que no cede en ciertos puntos y que deben sostener la postura.',power:'coercitivo'},{text:'Identifica qué tiene valor para la otra parte y lo usa.',power:'recompensa'},{text:'Recuerda que tienen autoridad formal sobre ese proceso.',power:'legitimo'},{text:'Prepara argumentos técnicos sólidos para respaldar la posición.',power:'experto'},{text:'Los anima a construir relación antes de negociar el contenido.',power:'referente'},{text:'Recopila datos y precedentes para ir con la mejor información posible.',power:'informacional'}] },
+  { text:'Un proyecto importante está en riesgo. ¿Qué hace primero tu líder?', options:[{text:'Establece que el fracaso no es una opción y pone presión sobre plazos.',power:'coercitivo'},{text:'Promete reconocimiento especial si el equipo da un esfuerzo extra.',power:'recompensa'},{text:'Como responsable del área, declara el proyecto en estado crítico.',power:'legitimo'},{text:'Analiza el problema técnico y propone una solución concreta.',power:'experto'},{text:'Habla honestamente con el equipo sobre la situación y qué se necesita.',power:'referente'},{text:'Reúne toda la información disponible para entender bien el problema.',power:'informacional'}] },
+  { text:'Alguien del equipo pide más autonomía. La respuesta de tu líder es…', options:[{text:'Aclara que hay límites y que ciertos procesos no son negociables.',power:'coercitivo'},{text:'Propone autonomía progresiva ligada a resultados demostrados.',power:'recompensa'},{text:'Explica los límites que impone el cargo y la política de la empresa.',power:'legitimo'},{text:'Da su criterio sobre en qué áreas está listo y en cuáles no.',power:'experto'},{text:'Explora con esa persona qué tipo de autonomía necesita y por qué.',power:'referente'},{text:'Comparte los criterios que usa para evaluar la madurez de cada área.',power:'informacional'}] },
+  { text:'Cuando quiere motivar al equipo para dar lo mejor de sí, tu líder…', options:[{text:'Deja claro qué pasa si los resultados no llegan.',power:'coercitivo'},{text:'Vincula el esfuerzo con recompensas concretas y visibles.',power:'recompensa'},{text:'Recuerda que cumplir con los objetivos es parte del rol.',power:'legitimo'},{text:'Comparte ejemplos y aprendizajes de cómo logró resultados similares.',power:'experto'},{text:'Conecta el trabajo con un propósito que va más allá del resultado.',power:'referente'},{text:'Muestra el contexto completo: por qué ese trabajo importa.',power:'informacional'}] },
+  { text:'Cuando tu líder comete un error importante frente al equipo, ¿qué hace?', options:[{text:'Lo maneja con discreción; la autoridad requiere cierta imagen.',power:'coercitivo'},{text:'Lo corrige rápidamente para mantener su credibilidad.',power:'recompensa'},{text:'Actúa dentro de su rol para resolver la situación formalmente.',power:'legitimo'},{text:'Analiza qué salió mal y comparte el aprendizaje técnico.',power:'experto'},{text:'Lo reconoce abiertamente y lo usa como ejemplo de aprendizaje.',power:'referente'},{text:'Documenta lo que falló y lo comparte con el equipo como información útil.',power:'informacional'}] },
+  { text:'Cuando tu líder tiene que comunicar malas noticias al equipo, ¿cómo lo hace?', options:[{text:'Es directo y establece expectativas claras sobre qué se requiere ahora.',power:'coercitivo'},{text:'Busca la forma de enmarcar las noticias con algún incentivo futuro.',power:'recompensa'},{text:'Las comunica como parte de su responsabilidad como líder del área.',power:'legitimo'},{text:'Explica con rigor el análisis detrás de la situación.',power:'experto'},{text:'Las dice con honestidad y se queda presente para contener la reacción.',power:'referente'},{text:'Da todo el contexto posible para que el equipo entienda por qué llegaron ahí.',power:'informacional'}] },
+  { text:'Cuando alguien del equipo sobresale, ¿cómo lo reconoce tu líder?', options:[{text:'Espera que sea la norma; reconocer demasiado puede bajar el estándar.',power:'coercitivo'},{text:'Lo recompensa con algo tangible: bono, día libre, visibilidad.',power:'recompensa'},{text:'Lo menciona en el foro formal correspondiente.',power:'legitimo'},{text:'Le da feedback experto sobre qué hizo bien y cómo puede crecer.',power:'experto'},{text:'Lo reconoce genuinamente, en privado y en público, por lo que es.',power:'referente'},{text:'Comparte sus logros con el equipo para que aprendan de su enfoque.',power:'informacional'}] },
+  { text:'En una conversación difícil con alguien que no rinde, tu líder…', options:[{text:'Es claro en que si no hay cambio, habrá consecuencias concretas.',power:'coercitivo'},{text:'Ofrece apoyo o incentivos si mejora en un plazo determinado.',power:'recompensa'},{text:'Lo enmarca como una conversación formal de desempeño.',power:'legitimo'},{text:'Diagnostica qué competencias le faltan y propone un plan.',power:'experto'},{text:'Primero entiende qué está pasando en su vida o motivación.',power:'referente'},{text:'Presenta datos concretos de su desempeño para que vea la situación.',power:'informacional'}] },
+  { text:'Cuando define la dirección estratégica del área, ¿cómo construye alineación tu líder?', options:[{text:'Comunica la dirección y espera que el equipo se alinee.',power:'coercitivo'},{text:'Vincula la estrategia con beneficios individuales para cada persona.',power:'recompensa'},{text:'La presenta como la visión oficial que deben ejecutar.',power:'legitimo'},{text:'Comparte el análisis detallado que sustenta la dirección.',power:'experto'},{text:'La co-construye con el equipo para que sea suya también.',power:'referente'},{text:'Muestra la información de mercado y negocio que llevó a esa decisión.',power:'informacional'}] },
+  { text:'Cuando alguien de otro nivel jerárquico intenta socavar la autoridad de tu líder, él/ella…', options:[{text:'Responde de forma contundente para que quede claro quién decide ahí.',power:'coercitivo'},{text:'Busca ganar su apoyo ofreciendo algo que le interese.',power:'recompensa'},{text:'Defiende su ámbito de autoridad formal con claridad.',power:'legitimo'},{text:'Demuestra con argumentos técnicos por qué su criterio es el correcto.',power:'experto'},{text:'Busca una conversación directa para entender qué hay detrás.',power:'referente'},{text:'Presenta la evidencia y contexto que justifican sus decisiones.',power:'informacional'}] },
+  { text:'Si tuvieras que describir en qué se basa principalmente la influencia de tu líder, dirías…', options:[{text:'En que el equipo sabe que tiene la autoridad para exigir.',power:'coercitivo'},{text:'En que puede abrir puertas y dar reconocimiento a quienes se destacan.',power:'recompensa'},{text:'En el rol que ocupa y las responsabilidades que tiene asignadas.',power:'legitimo'},{text:'En su conocimiento, experiencia y juicio sobre el trabajo.',power:'experto'},{text:'En quién es, los valores que vive y la confianza que genera.',power:'referente'},{text:'En que maneja y comparte información relevante que otros necesitan.',power:'informacional'}] },
+];
 
-// Get program ID from URL: /p/:id
-const pid = location.pathname.split('/').filter(Boolean).pop();
-let prog = null;
-const answers = {};
-let submitted = false;
+const LETTERS = ['A','B','C','D','E','F'];
+
+/* ── Estado ─────────────────────────────────────────────── */
+let prog = null, pid = null;
+let instr = null;      // 'rbs' | 'fr-equipo'
+let QUESTIONS = [];
+let phase = 'intro';   // 'intro' | 'questions' | 'results'
+let _name = '';        // nombre del evaluador (RBS) o del líder (FR)
+let answers = {};
+let current = 0;
 let pvErr = '';
 
-async function load() {
-  try {
-    const r = await fetch('/api/public/programs/' + pid);
-    const j = await r.json();
-    if (!r.ok) { showErr(j.error || 'Programa no encontrado.'); return; }
-    prog = j;
-    draw();
-  } catch(e) { showErr('Error al cargar la evaluación.'); }
+function esc(s){ const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML; }
+
+/* ── Normalizar instrumentos ────────────────────────────── */
+function instrList(raw) {
+  return (raw||[]).map(i => typeof i === 'string' ? i : i.key).filter(Boolean);
 }
 
-function showErr(msg) {
-  document.getElementById('card').innerHTML = `<div class="ty"><div class="ty-icon">⚠️</div><div class="ty-ttl">No disponible</div><div class="ty-sub">${esc(msg)}</div></div>`;
+/* ── Config por instrumento ─────────────────────────────── */
+function cfg() {
+  if (instr === 'fr-equipo') return {
+    eyebrow: `French & Raven · ${esc(prog.name)}`,
+    title: '¿Desde dónde lidera <em>tu líder</em>?',
+    subtitle: esc(prog.context || 'Presencia Ejecutiva'),
+    intro: '15 situaciones reales. Elige la respuesta que mejor describe la forma en que <strong>tu líder actúa</strong> habitualmente.',
+    fieldLabel: 'Nombre del líder que evalúas',
+    fieldPlaceholder: 'Ej. Ana Martínez',
+    isAnon: true,
+    questions: Q_FR,
+    resultsTitle: 'Perfil de poder de tu líder',
+    showResults: true,
+  };
+  return {
+    eyebrow: `Reflected Best Self · ${esc(prog.name)}`,
+    title: '¿Desde dónde <em>lideras</em>?',
+    subtitle: esc(prog.context || 'Presencia Ejecutiva'),
+    intro: '15 situaciones reales. En cada una, elige la respuesta que más refleje tu forma natural de actuar como líder.',
+    fieldLabel: 'Tu nombre',
+    fieldPlaceholder: 'Nombre completo',
+    isAnon: false,
+    questions: Q_RBS,
+    resultsTitle: 'Tu perfil de poder',
+    showResults: true,
+  };
 }
 
+/* ── Render ─────────────────────────────────────────────── */
 function draw() {
-  if (submitted) {
-    document.getElementById('card').innerHTML = `<div class="ty">
-      <div class="ty-icon">🎯</div>
-      <div class="ty-ttl">¡Gracias por tu evaluación!</div>
-      <div class="ty-sub">Tu respuesta ha sido registrada para el programa <strong>${esc(prog.name)}</strong>.<br>Tu facilitadora recibirá los resultados de forma agregada.</div>
+  const card = document.getElementById('card');
+  if (!prog) return;
+  const c = cfg();
+
+  const hdr = `
+    <div class="hdr">
+      <div class="hdr-eyebrow">${c.eyebrow}</div>
+      <div class="hdr-ttl">${c.title}</div>
+      <div class="hdr-sub">${c.subtitle}</div>
+    </div>
+    <div class="prog-bar">
+      <div class="prog-fill" style="width:${phase==='intro'?0:phase==='results'?100:Math.round(current/15*100)}%"></div>
     </div>`;
+
+  if (phase === 'intro') {
+    card.innerHTML = hdr + `
+      <div class="intro-body">
+        <p class="intro-txt">${c.intro}<br><br>No hay respuestas correctas ni incorrectas — lo importante es la honestidad.</p>
+        ${c.isAnon ? `<div class="anon-notice">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#7B3FA8" stroke-width="2" stroke-linecap="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          Tu nombre <strong>no será registrado</strong>. Solo se guardará el nombre del líder para consolidar las respuestas del equipo.
+        </div>` : ''}
+        <label class="f-lbl">${c.fieldLabel}</label>
+        <input id="pv-inp" class="f-inp" placeholder="${c.fieldPlaceholder}" value="${esc(_name)}" oninput="syncName()">
+        ${pvErr ? `<div class="err-msg">${esc(pvErr)}</div>` : ''}
+        <button class="btn-start" onclick="startQ()" ${_name.trim()?'':'disabled'}>Comenzar evaluación →</button>
+      </div>`;
     return;
   }
 
-  const hasFR  = (prog.instruments||[]).includes('fr-equipo');
-  const hasRBS = (prog.instruments||[]).includes('rbs');
-  const leader = _leader || 'el/la líder';
-  const answered = Object.keys(answers).length;
+  if (phase === 'questions') {
+    const q = QUESTIONS[current];
+    const sel = answers['q'+current];
+    card.innerHTML = hdr + `
+      <div class="q-body">
+        <div class="q-counter">Pregunta ${current+1} de 15</div>
+        <div class="q-text">${esc(q.text)}</div>
+        <div class="opts">
+          ${q.options.map((o,i)=>`
+            <div class="opt${sel===o.power?' sel':''}" onclick="selOpt(${i})">
+              <div class="opt-letter">${LETTERS[i]}</div>
+              <div class="opt-text">${esc(o.text)}</div>
+            </div>`).join('')}
+        </div>
+        <div class="q-nav">
+          <button class="btn-back" onclick="goBack()" ${current===0?'style="visibility:hidden"':''}>← Anterior</button>
+          <button class="btn-next" onclick="goNext()" ${sel?'':'disabled'}>
+            ${current<14?'Siguiente →':'Finalizar →'}
+          </button>
+        </div>
+      </div>`;
+    return;
+  }
 
-  const sitHtml = hasFR ? `<div class="sit-list">${FR_SIT.map((s,i) => {
-    const txt = s.text.replace(/\[L\]/g, `<strong>${esc(leader)}</strong>`);
-    return `<div class="sit">
-      <div class="sit-num">Situación ${i+1} · ${s.base}</div>
-      <div class="sit-txt">${txt}</div>
-      <div class="sit-scale">
-        <span class="scale-lbl">Poco</span>
-        <div class="scale-btns">${[1,2,3,4,5].map(v=>`<button class="sb${answers[s.id]===v?' on':''}" onclick="setAns('${s.id}',${v})">${v}</button>`).join('')}</div>
-        <span class="scale-lbl">Mucho</span>
-      </div>
-    </div>`;
-  }).join('')}</div>` : '';
+  if (phase === 'results') {
+    const c2 = cfg();
+    const counts = {};
+    Object.keys(POWERS).forEach(p => counts[p]=0);
+    Object.values(answers).forEach(p => { if(counts[p]!==undefined) counts[p]++; });
+    const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const dominant = sorted[0][0];
+    const D = DESCRIPTIONS[dominant];
+    const P = POWERS[dominant];
 
-  document.getElementById('card').innerHTML = `
-    <div class="pv-hdr"><div class="pv-ttl">${esc(prog.name)}</div><div class="pv-sub">${esc(prog.context||'')} · Evaluación de liderazgo</div></div>
-    ${hasFR?`<div class="pv-intro">Para cada situación, indica en qué medida te describes — del <strong>1</strong> (no me identifica) al <strong>5</strong> (me identifica completamente). Tus respuestas son <strong>anónimas</strong>.</div>`:''}
-    <div class="name-wrap">
-      ${hasFR?`<div class="f-row"><label class="f-lbl">Nombre del líder que evalúas</label><input id="pv-leader" class="f-inp" placeholder="Nombre completo del líder" value="${esc(_leader)}" oninput="syncLeader()"></div>`:''}
-      ${!hasFR?`<div class="f-row"><label class="f-lbl">Tu nombre</label><input id="pv-name" class="f-inp" placeholder="Nombre completo" value="${esc(_name)}" oninput="syncName()"></div>`:''}
-    </div>
-    ${sitHtml}
-    <div class="pv-foot">
-      ${hasFR?`<div class="progress-txt">${answered} de 15 situaciones respondidas</div>`:''}
-      <button class="pv-submit" onclick="submit()"${hasFR&&answered<15?' disabled':''}>Enviar evaluación</button>
-      ${pvErr?`<div class="pv-err">${esc(pvErr)}</div>`:''}
-    </div>`;
+    if (instr === 'fr-equipo') {
+      // FR-EQUIPO: perfil del líder evaluado con impulsores/limitantes
+      card.innerHTML = hdr + `
+        <div class="res-body">
+          <div style="text-align:center;margin-bottom:18px">
+            <div class="dom-chip">Evaluación completada</div>
+            <div class="res-ttl">${esc(_name)}</div>
+            <div class="res-sub">Perfil de poder percibido por el evaluador — French &amp; Raven (1959)</div>
+          </div>
+          <div style="background:rgba(233,160,32,.08);border:1px solid rgba(233,160,32,.3);border-radius:12px;padding:16px 18px;margin-bottom:20px;text-align:center">
+            <div class="dom-eyebrow" style="margin-bottom:6px">Base de poder predominante</div>
+            <div class="dom-name" style="color:${P.color};font-size:26px">${P.label}</div>
+            <div style="font-size:13px;color:var(--tx2);margin-top:6px;line-height:1.5">${esc(D.desc)}</div>
+          </div>
+          <div class="res-chart">
+            ${sorted.map(([p,n])=>`
+              <div class="bar-row">
+                <div class="bar-lbl">Poder ${POWERS[p].label}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/15*100)}%;background:${POWERS[p].color}"></div></div>
+                <div class="bar-val">${n}</div>
+              </div>`).join('')}
+          </div>
+          <div class="il-grid">
+            <div class="il-box il-imp">
+              <div class="il-title">✦ Impulsores</div>
+              <ul class="il-list">${D.impulsores.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>
+            </div>
+            <div class="il-box il-lim">
+              <div class="il-title">⚠ Limitantes</div>
+              <ul class="il-list">${D.limitantes.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>
+            </div>
+          </div>
+          <button class="btn-evaluar" onclick="resetForm()">Evaluar a otro líder</button>
+        </div>`;
+      return;
+    }
+
+    // RBS: perfil propio con preguntas de reflexión
+    card.innerHTML = hdr + `
+      <div class="res-body">
+        <div class="res-ttl">${c2.resultsTitle}</div>
+        <div class="res-sub">${esc(_name)} · ${Object.keys(answers).length} situaciones</div>
+        <div class="res-chart">
+          ${sorted.map(([p,n])=>`
+            <div class="bar-row">
+              <div class="bar-lbl">${POWERS[p].label}</div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/15*100)}%;background:${POWERS[p].color}"></div></div>
+              <div class="bar-val">${n}</div>
+            </div>`).join('')}
+        </div>
+        <div class="dominant">
+          <div class="dom-eyebrow">Base dominante</div>
+          <div class="dom-name" style="color:${P.color}">${P.label}</div>
+          <div class="dom-desc">${esc(D.desc)}</div>
+          <ul class="dom-reflect">${D.reflection.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
+          <div class="dom-note">${esc(D.note)}</div>
+        </div>
+        <div class="il-grid">
+          <div class="il-box il-imp">
+            <div class="il-title">✦ Impulsores</div>
+            <ul class="il-list">${D.impulsores.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>
+          </div>
+          <div class="il-box il-lim">
+            <div class="il-title">⚠ Limitantes</div>
+            <ul class="il-list">${D.limitantes.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>`;
+  }
 }
 
-let _name = '';
-let _leader = '';
-window.syncName   = function() { _name   = document.getElementById('pv-name')?.value||''; };
-window.syncLeader = function() { _leader = document.getElementById('pv-leader')?.value||''; draw(); };
-window.setAns     = function(sid, v) { answers[sid]=v; draw(); };
-
-window.submit = async function() {
-  const hasFR = (prog.instruments||[]).includes('fr-equipo');
-  _leader = document.getElementById('pv-leader')?.value?.trim()||'';
-  _name   = hasFR ? 'Anónimo' : (document.getElementById('pv-name')?.value?.trim()||'');
-  if (hasFR && !_leader) { pvErr='Ingresa el nombre del líder que estás evaluando.'; draw(); return; }
-  if (!hasFR && !_name) { pvErr='Ingresa tu nombre para continuar.'; draw(); return; }
-  if (hasFR && Object.keys(answers).length < 15) { pvErr=`Completa las ${15-Object.keys(answers).length} situación(es) restante(s).`; draw(); return; }
-  pvErr = '';
-  try {
-    const r = await fetch('/api/responses', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        program_id: pid,
-        participant_name: _name,
-        leader_name: _leader,
-        instrument: hasFR ? 'fr-equipo' : 'rbs',
-        answers: hasFR ? {...answers} : {}
-      })
-    });
-    const j = await r.json();
-    if (!r.ok) { pvErr = j.error || 'Error al enviar.'; draw(); return; }
-    submitted = true; draw();
-  } catch(e) { pvErr='Error de conexión. Intenta de nuevo.'; draw(); }
+/* ── Navegación ─────────────────────────────────────────── */
+window.syncName = function() {
+  _name = document.getElementById('pv-inp')?.value || '';
+  const btn = document.querySelector('.btn-start');
+  if (btn) btn.disabled = !_name.trim();
+};
+window.startQ = function() {
+  _name = document.getElementById('pv-inp')?.value?.trim() || '';
+  if (!_name) { pvErr = 'Este campo es requerido.'; draw(); return; }
+  pvErr = ''; phase = 'questions'; current = 0; draw();
+};
+window.selOpt = function(i) {
+  answers['q'+current] = QUESTIONS[current].options[i].power;
+  draw();
+};
+window.goNext = function() {
+  if (!answers['q'+current]) return;
+  if (current < 14) { current++; draw(); }
+  else submitResults();
+};
+window.goBack = function() {
+  if (current > 0) { current--; draw(); }
 };
 
-load();
+window.resetForm = function() {
+  _name = ''; answers = {}; current = 0; pvErr = ''; phase = 'intro'; draw();
+};
+
+/* ── Submit ─────────────────────────────────────────────── */
+async function submitResults() {
+  phase = 'results';
+  draw();
+  try {
+    await fetch('/api/responses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        program_id: pid,
+        participant_name: instr === 'fr-equipo' ? 'Anónimo' : _name,
+        leader_name:      instr === 'fr-equipo' ? _name : '',
+        instrument: instr,
+        answers,
+      })
+    });
+  } catch(e) {}
+}
+
+/* ── Init ───────────────────────────────────────────────── */
+async function init() {
+  // URL: /p/:programId  o  /p/:programId/:instrument
+  const parts = location.pathname.split('/p/')[1]?.split('/') || [];
+  pid   = parts[0];
+  const instrFromUrl = parts[1] || null;
+  if (!pid) { document.getElementById('card').innerHTML='<div class="spinner">Link inválido.</div>'; return; }
+  try {
+    const r = await fetch('/api/public/programs/' + pid);
+    if (!r.ok) throw new Error();
+    prog = await r.json();
+    const instrs = instrList(prog.instruments);
+    // Instrumento desde URL si existe y es válido; si no, primer disponible
+    if (instrFromUrl && instrs.includes(instrFromUrl)) {
+      instr = instrFromUrl;
+    } else {
+      instr = instrs.includes('fr-equipo') ? 'fr-equipo' : instrs.includes('rbs') ? 'rbs' : null;
+    }
+    if (!instr) { document.getElementById('card').innerHTML='<div class="spinner">No hay instrumentos configurados para este programa.</div>'; return; }
+    QUESTIONS = instr === 'fr-equipo' ? Q_FR : Q_RBS;
+    draw();
+  } catch(e) {
+    document.getElementById('card').innerHTML='<div class="spinner">Programa no encontrado.</div>';
+  }
+}
+
+init();
 </script>
 </body>
 </html>
