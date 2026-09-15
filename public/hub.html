@@ -135,6 +135,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .instr-opt-lbl{font-size:13px;font-weight:500}
 .instr-opt-sub{font-size:11px;color:var(--tx2)}
 .instr-opt-wrap{display:flex;flex-direction:column}
+.leader-chip{display:inline-flex;align-items:center;gap:4px;background:var(--pe-bg);color:var(--pe);font-size:12px;font-weight:500;padding:3px 8px;border-radius:20px;border:1px solid var(--pu-border)}
+.leader-chip button{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:14px;line-height:1;padding:0 0 0 2px;display:flex;align-items:center}
+.leader-chip button:hover{color:var(--tx)}
+.leaders-section{padding:8px 12px 10px;border-top:1px solid var(--pu-border);background:var(--bg)}
+.leaders-chips{display:flex;flex-wrap:wrap;gap:5px;min-height:24px;margin-bottom:6px}
 .instr-dates{padding:0 2px}
 .instr-dates.hidden{display:none}
 .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--pu-border)}
@@ -871,17 +876,61 @@ function renderModal() {
   if (modal === 'add-part')  root.innerHTML = modalAddPart();
 }
 
+// Líderes configurados para FR-Equipo en el modal actual
+let _frLeaders = [];
+
+function renderLeaderChips() {
+  const el = document.getElementById('leaders-chips');
+  if (!el) return;
+  el.innerHTML = _frLeaders.length
+    ? _frLeaders.map((l,i) => `<span class="leader-chip">${esc(l)}<button onclick="removeLeader(${i})">×</button></span>`).join('')
+    : '<span style="font-size:11px;color:var(--tx2);align-self:center">Aún no hay líderes agregados</span>';
+}
+
+function addLeader() {
+  const inp = document.getElementById('leader-inp');
+  if (!inp) return;
+  const name = inp.value.trim();
+  if (!name) return;
+  if (!_frLeaders.includes(name)) _frLeaders.push(name);
+  inp.value = '';
+  renderLeaderChips();
+}
+
+function removeLeader(i) {
+  _frLeaders.splice(i, 1);
+  renderLeaderChips();
+}
+
 function instrFormRows(currentInstruments) {
-  /* currentInstruments: array of {key,start_date,end_date} or null for new */
+  /* currentInstruments: array of {key,start_date,end_date,leaders} or null for new */
   const cur = {};
   (currentInstruments||[]).forEach(i => {
     const key = typeof i === 'string' ? i : i.key;
     cur[key] = typeof i === 'string' ? {} : i;
   });
+  // Inicializar líderes desde datos actuales
+  _frLeaders = [...(cur['fr-equipo']?.leaders || [])];
+
   return Object.entries(INSTRUMENTS).map(([k,v]) => {
     const checked = !!cur[k];
     const sd = cur[k]?.start_date||'';
     const ed = cur[k]?.end_date||'';
+    const leadersSection = k === 'fr-equipo' ? `
+      <div class="leaders-section${checked?'':' hidden'}" id="il-fr-equipo">
+        <label class="f-lbl" style="font-size:10px;margin-bottom:5px;display:block">Líderes a evaluar</label>
+        <div class="leaders-chips" id="leaders-chips">
+          ${_frLeaders.length
+            ? _frLeaders.map((l,i) => `<span class="leader-chip">${esc(l)}<button onclick="removeLeader(${i})">×</button></span>`).join('')
+            : '<span style="font-size:11px;color:var(--tx2);align-self:center">Aún no hay líderes agregados</span>'}
+        </div>
+        <div style="display:flex;gap:6px">
+          <input id="leader-inp" class="f-inp" style="flex:1;font-size:12px" placeholder="Nombre del líder..."
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addLeader()}">
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;white-space:nowrap" onclick="addLeader()">+ Agregar</button>
+        </div>
+      </div>` : '';
+
     return `<div class="instr-opt-wrap" id="iow-${k}">
       <label class="instr-opt${checked?' on':''}" id="io-${k}">
         <input type="checkbox" id="cb-${k}" onchange="toggleOpt('${k}')"${checked?' checked':''}>
@@ -893,6 +942,7 @@ function instrFormRows(currentInstruments) {
           <div><label class="f-lbl" style="font-size:10px">Cierre</label><input id="ed-${k}" class="f-inp" type="date" value="${ed}"></div>
         </div>
       </div>
+      ${leadersSection}
     </div>`;
   }).join('');
 }
@@ -967,6 +1017,10 @@ function toggleOpt(k) {
   document.getElementById('io-' + k)?.classList.toggle('on', checked);
   const dates = document.getElementById('id-' + k);
   if (dates) dates.classList.toggle('hidden', !checked);
+  if (k === 'fr-equipo') {
+    const ls = document.getElementById('il-fr-equipo');
+    if (ls) ls.classList.toggle('hidden', !checked);
+  }
 }
 
 function collectInstruments() {
@@ -976,6 +1030,7 @@ function collectInstruments() {
       key: k,
       start_date: document.getElementById('sd-' + k)?.value||null,
       end_date:   document.getElementById('ed-' + k)?.value||null,
+      ...(k === 'fr-equipo' ? { leaders: [..._frLeaders] } : {}),
     }));
 }
 

@@ -179,6 +179,12 @@ function instrList(raw) {
   return (raw||[]).map(i => typeof i === 'string' ? i : i.key).filter(Boolean);
 }
 
+function frLeaders() {
+  if (!prog?.instruments) return [];
+  const entry = prog.instruments.find(i => (typeof i === 'string' ? i : i.key) === 'fr-equipo');
+  return (typeof entry === 'object' && Array.isArray(entry.leaders)) ? entry.leaders : [];
+}
+
 /* ── Config por instrumento ─────────────────────────────── */
 function cfg() {
   if (instr === 'fr-equipo') return {
@@ -232,7 +238,13 @@ function draw() {
           Tu nombre <strong>no será registrado</strong>. Solo se guardará el nombre del líder para consolidar las respuestas del equipo.
         </div>` : ''}
         <label class="f-lbl">${c.fieldLabel}</label>
-        <input id="pv-inp" class="f-inp" placeholder="${c.fieldPlaceholder}" value="${esc(_name)}" oninput="syncName()">
+        ${(instr === 'fr-equipo' && frLeaders().length > 0)
+          ? `<select id="pv-inp" class="f-inp" onchange="syncName()">
+               <option value="">— Selecciona un líder —</option>
+               ${frLeaders().map(l => `<option value="${esc(l)}"${_name===l?' selected':''}>${esc(l)}</option>`).join('')}
+             </select>`
+          : `<input id="pv-inp" class="f-inp" placeholder="${c.fieldPlaceholder}" value="${esc(_name)}" oninput="syncName()">`
+        }
         ${pvErr ? `<div class="err-msg">${esc(pvErr)}</div>` : ''}
         <button class="btn-start" onclick="startQ()" ${_name.trim()?'':'disabled'}>Comenzar evaluación →</button>
       </div>`;
