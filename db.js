@@ -148,11 +148,26 @@ const db = {
   /* ── Programs ─────────────────────────────────────── */
   async getPrograms() {
     if (USE_PG) {
-      const { rows } = await pgQuery('SELECT * FROM programs ORDER BY created_at DESC');
+      const { rows } = await pgQuery(`
+        SELECT p.*,
+          COUNT(DISTINCT pt.id)::int AS _parts,
+          COUNT(DISTINCT r.id)::int  AS _resps
+        FROM programs p
+        LEFT JOIN participants pt ON pt.program_id = p.id
+        LEFT JOIN responses   r  ON r.program_id  = p.id
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+      `);
       return rows;
     }
     const data = loadJson();
-    return Object.values(data.programs).sort((a,b) => b.created_at > a.created_at ? 1 : -1);
+    return Object.values(data.programs)
+      .sort((a,b) => b.created_at > a.created_at ? 1 : -1)
+      .map(p => ({
+        ...p,
+        _parts: Object.values(data.participants).filter(pt => pt.program_id === p.id).length,
+        _resps: Object.values(data.responses).filter(r => r.program_id === p.id).length,
+      }));
   },
 
   async createProgram(id, fields) {

@@ -135,6 +135,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .instr-opt-lbl{font-size:13px;font-weight:500}
 .instr-opt-sub{font-size:11px;color:var(--tx2)}
 .instr-opt-wrap{display:flex;flex-direction:column}
+.resp-list{border-top:1px solid var(--pu-border);padding:8px 12px;display:flex;flex-direction:column;gap:4px}
+.resp-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx);padding:2px 0}
 .leader-chip{display:inline-flex;align-items:center;gap:4px;background:var(--pe-bg);color:var(--pe);font-size:12px;font-weight:500;padding:3px 8px;border-radius:20px;border:1px solid var(--pu-border)}
 .leader-chip button{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:14px;line-height:1;padding:0 0 0 2px;display:flex;align-items:center}
 .leader-chip button:hover{color:var(--tx)}
@@ -337,8 +339,8 @@ function render() {
 
   const statsHtml = `<div class="stats">
     <div class="stat"><div class="stat-lbl">Programas activos</div><div class="stat-val">${programs.filter(p=>p.status==='active').length}</div><div class="stat-sub">${programs.filter(p=>p.status==='pending').length} por configurar</div></div>
-    <div class="stat"><div class="stat-lbl">Participantes</div><div class="stat-val">${detailData[selId]?.participants?.length||'—'}</div><div class="stat-sub">en programa seleccionado</div></div>
-    <div class="stat"><div class="stat-lbl">Evaluaciones</div><div class="stat-val">${detailData[selId]?.responses?.length||'—'}</div><div class="stat-sub">recibidas</div></div>
+    <div class="stat"><div class="stat-lbl">Participantes</div><div class="stat-val">${totalPart||'—'}</div><div class="stat-sub">registrados en total</div></div>
+    <div class="stat"><div class="stat-lbl">Evaluaciones</div><div class="stat-val">${totalResp||'—'}</div><div class="stat-sub">recibidas en total</div></div>
     <div class="stat"><div class="stat-lbl">Próxima sesión</div><div class="stat-val" style="font-size:17px;margin-top:3px">${next?fmtDate(next.session_date):'—'}</div><div class="stat-sub">${next?esc(next.name):'Sin sesiones'}</div></div>
   </div>`;
 
@@ -360,8 +362,8 @@ function render() {
 
 function renderCard(p) {
   const d = detailData[p.id];
-  const parts = d?.participants?.length || 0;
-  const resps = d?.responses?.length || 0;
+  const parts = d?.participants?.length ?? p._parts ?? 0;
+  const resps = d?.responses?.length    ?? p._resps ?? 0;
   const pct   = parts > 0 ? Math.round(resps/parts*100) : 0;
   const instrs = instrList(p.instruments);
   return `<div class="card${selId===p.id?' sel':''}" onclick="selectProg('${esc(p.id)}')">
@@ -408,7 +410,7 @@ function renderDetail(pid) {
           <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
           Participante
         </button>
-        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="deleteProg('${esc(pid)}')">Eliminar</button>
+        <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('${esc(pid)}','${esc(prog.name)}')">Eliminar</button>
       </div>
     </div>
     <div class="det-body">
@@ -418,19 +420,39 @@ function renderDetail(pid) {
           <div class="ilist">
             ${instrs.length===0
               ? `<div style="font-size:13px;color:var(--tx2)">Sin instrumentos configurados.</div>`
-              : instrs.map(i=>`<div class="irow">
-                  <div class="irow-info"><div class="idot ${i.tag}"></div><div>
-                    <div class="irow-name">${esc(i.label)}</div>
-                    <div class="irow-type">${esc(i.desc)}${i.start_date?` · <strong>${fmtDateShort(i.start_date)}</strong>${i.end_date?` → ${fmtDateShort(i.end_date)}`:''}`:''}</div>
-                  </div></div>
-                  <div style="display:flex;align-items:center;gap:10px">
-                    <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${ptlist.length}</span></div><div class="of">completaron</div></div>
-                    <button class="btn-irow" onclick="copyLink('${esc(link)}/${esc(i.key)}')">
-                      <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"/></svg>
-                      Copiar link
-                    </button>
-                  </div>
-                </div>`).join('')}
+              : instrs.map(i=>{
+                  const iResps = rlist.filter(r=>r.instrument===i.key && r.answers && Object.keys(r.answers).length>0);
+                  let respondentRows = '';
+                  if (i.key === 'fr-equipo') {
+                    const byLeader = {};
+                    iResps.forEach(r => {
+                      const k = (r.leader_name||'Sin nombre').trim();
+                      byLeader[k] = (byLeader[k]||0) + 1;
+                    });
+                    respondentRows = Object.entries(byLeader).map(([name, count]) =>
+                      `<div class="resp-row"><span class="pav" style="width:22px;height:22px;font-size:9px">${initials(name)}</span><span style="flex:1">${esc(name)}</span><span style="font-size:11px;color:var(--tx2)">${count} eval.</span></div>`
+                    ).join('');
+                  } else {
+                    const done = new Set(iResps.map(r => r.participant_name));
+                    respondentRows = [...done].map(name =>
+                      `<div class="resp-row"><span class="pav" style="width:22px;height:22px;font-size:9px">${initials(name)}</span><span style="flex:1">${esc(name)}</span><span style="color:var(--ok);font-size:12px">✓</span></div>`
+                    ).join('');
+                  }
+                  return `<div class="irow">
+                    <div class="irow-info"><div class="idot ${i.tag}"></div><div>
+                      <div class="irow-name">${esc(i.label)}</div>
+                      <div class="irow-type">${esc(i.desc)}${i.start_date?` · <strong>${fmtDateShort(i.start_date)}</strong>${i.end_date?` → ${fmtDateShort(i.end_date)}`:''}`:''}</div>
+                    </div></div>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${i.key==='fr-equipo'?iResps.length:ptlist.length}</span></div><div class="of">completaron</div></div>
+                      <button class="btn-irow" onclick="copyLink('${esc(link)}/${esc(i.key)}')">
+                        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"/></svg>
+                        Copiar link
+                      </button>
+                    </div>
+                    ${respondentRows ? `<div class="resp-list">${respondentRows}</div>` : ''}
+                  </div>`;
+                }).join('')}
           </div>
           ${frResps.length>0?`<div style="margin-top:16px"><div class="det-col-ttl">F&R agregado · ${esc(prog.name)}</div>${buildChart(frResps)}</div>`:''}
         </div>
@@ -704,8 +726,25 @@ async function selectProg(id) {
   } catch(e) { showToast('Error: ' + e.message); }
 }
 
+function confirmDelete(id, name) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="max-width:400px">
+      <div class="modal-hdr"><div class="modal-ttl">Eliminar programa</div><button class="modal-x" onclick="closeModal()">×</button></div>
+      <div class="modal-body">
+        <p style="font-size:14px;color:var(--tx);margin-bottom:8px">¿Eliminar <strong>${esc(name)}</strong> y todos sus datos?</p>
+        <p style="font-size:12px;color:var(--tx2)">Esta acción no se puede deshacer. Se eliminarán participantes y respuestas.</p>
+        <div class="modal-foot">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+          <button class="btn btn-danger" onclick="deleteProg('${esc(id)}')">Sí, eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 async function deleteProg(id) {
-  if (!confirm('¿Eliminar este programa y todos sus datos?')) return;
+  closeModal();
   try {
     await api('/api/programs/' + id, { method:'DELETE' });
     if (selId === id) selId = null;
