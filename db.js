@@ -150,11 +150,10 @@ const db = {
     if (USE_PG) {
       const { rows } = await pgQuery(`
         SELECT p.*,
-          COUNT(DISTINCT pt.id)::int AS _parts,
-          COUNT(DISTINCT r.id)::int  AS _resps
+          COUNT(DISTINCT CASE WHEN r.participant_name NOT IN ('Anónimo','') THEN r.participant_name END)::int AS _parts,
+          COUNT(DISTINCT r.id)::int AS _resps
         FROM programs p
-        LEFT JOIN participants pt ON pt.program_id = p.id
-        LEFT JOIN responses   r  ON r.program_id  = p.id
+        LEFT JOIN responses r ON r.program_id = p.id
         GROUP BY p.id
         ORDER BY p.created_at DESC
       `);
@@ -163,11 +162,14 @@ const db = {
     const data = loadJson();
     return Object.values(data.programs)
       .sort((a,b) => b.created_at > a.created_at ? 1 : -1)
-      .map(p => ({
-        ...p,
-        _parts: Object.values(data.participants).filter(pt => pt.program_id === p.id).length,
-        _resps: Object.values(data.responses).filter(r => r.program_id === p.id).length,
-      }));
+      .map(p => {
+        const pResps = Object.values(data.responses).filter(r => r.program_id === p.id);
+        return {
+          ...p,
+          _parts: new Set(pResps.map(r => r.participant_name).filter(n => n && n !== 'Anónimo')).size,
+          _resps: pResps.length,
+        };
+      });
   },
 
   async createProgram(id, fields) {

@@ -235,7 +235,7 @@ function draw() {
         <p class="intro-txt">${c.intro}<br><br>No hay respuestas correctas ni incorrectas — lo importante es la honestidad.</p>
         ${c.isAnon ? `<div class="anon-notice">
           <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path stroke="#7B3FA8" stroke-width="2" stroke-linecap="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-          Tu nombre <strong>no será registrado</strong>. Solo se guardará el nombre del líder para consolidar las respuestas del equipo.
+          Tu nombre <strong>no será registrado</strong> — solo se guardará el nombre del líder para consolidar las respuestas del equipo.
         </div>` : ''}
         <label class="f-lbl">${c.fieldLabel}</label>
         ${(instr === 'fr-equipo' && frLeaders().length > 0)

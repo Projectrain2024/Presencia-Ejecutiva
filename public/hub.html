@@ -88,7 +88,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .btn-w:hover{background:rgba(255,255,255,.22)}
 .btn-gld{background:var(--gold);color:#1C0D36;border:none;font-family:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .det-body{padding:20px 24px}
-.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.det-grid{display:grid;grid-template-columns:1fr;gap:22px}
 .det-col-ttl{font-size:10px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--tx2);margin-bottom:10px}
 .ilist{display:flex;flex-direction:column;gap:7px}
 .irow{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-radius:8px;border:1px solid var(--pu-border)}
@@ -151,6 +151,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 /* Loading */
 .loading{color:var(--tx2);font-size:13px;text-align:center;padding:40px}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -283,7 +284,7 @@ function showPrograms() {
   render();
 }
 
-function showInstr(key) {
+async function showInstr(key) {
   activeView = key;
   setNavActive(key === 'fr-equipo' ? 'nav-fr' : 'nav-rbs');
   const m = INSTR_META[key];
@@ -292,37 +293,177 @@ function showInstr(key) {
 
   const using = programs.filter(p => instrList(p.instruments).some(i => i.key === key));
   const origin = location.origin;
+  const accentColor = key === 'fr-equipo' ? '#8e44ad' : '#2980b9';
 
-  document.getElementById('content').innerHTML = `
-    <div style="max-width:700px">
-      <div style="background:var(--card);border:1px solid var(--pu-border);border-radius:12px;padding:22px 24px;margin-bottom:18px">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Descripción</div>
-        <p style="font-size:14px;line-height:1.65;color:var(--tx)">${esc(m.desc)}</p>
-        <div style="margin-top:16px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Cómo funciona</div>
-        <ol style="padding-left:18px;display:flex;flex-direction:column;gap:6px">
-          ${m.how.map(h=>`<li style="font-size:13.5px;color:var(--tx2);line-height:1.5">${esc(h)}</li>`).join('')}
-        </ol>
+  document.getElementById('content').innerHTML = `<div style="color:var(--tx2);font-size:13px;padding:24px">Cargando resultados…</div>`;
+
+  // Fetch details for uncached programs
+  await Promise.all(using.map(async p => {
+    if (!detailData[p.id]) {
+      try { detailData[p.id] = await api('/api/programs/' + p.id); } catch(e) {}
+    }
+  }));
+
+  // Set toolbar button (key captured in closure)
+  document.querySelector('.tb-acts').innerHTML =
+    `<button class="btn btn-secondary" onclick="downloadInstr('${key}')">↓ Descargar resultados</button>`;
+
+  // Flat list of responses for this instrument
+  const allResps = [];
+  using.forEach(p => {
+    const d = detailData[p.id];
+    if (!d) return;
+    (d.responses || []).filter(r => r.instrument === key).forEach(r =>
+      allResps.push({ ...r, _sector: p.sector || 'Sin sector', _progName: p.name })
+    );
+  });
+
+  const miniBar = (counts, total, dominant) => POWER_KEYS.map(k => {
+    const n = counts[k] || 0;
+    const pct = total > 0 ? Math.round(n / total * 100) : 0;
+    const isTop = k === dominant;
+    return `<div style="display:grid;grid-template-columns:70px 1fr 20px;align-items:center;gap:6px">
+      <div style="font-size:10px;color:var(--tx2);text-align:right;${isTop ? 'font-weight:700;color:var(--tx)' : ''}">${POWER_META[k].label}</div>
+      <div style="height:6px;background:var(--pu-border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;border-radius:3px;background:${POWER_META[k].color};width:${pct}%"></div>
       </div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:12px">Programas que usan este instrumento <span style="font-size:13px;font-weight:400;color:var(--tx2)">(${using.length})</span></div>
-      ${using.length === 0
-        ? `<div style="background:var(--card);border:1px dashed var(--pu-border);border-radius:11px;padding:32px;text-align:center;color:var(--tx2);font-size:13px">Ningún programa tiene este instrumento configurado aún.</div>`
-        : `<div style="display:flex;flex-direction:column;gap:10px">
-            ${using.map(p => {
-              const link = `${origin}/p/${p.id}/${key}`;
-              return `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-                <div>
-                  <div style="font-size:14px;font-weight:600">${esc(p.name)}</div>
-                  <div style="font-size:11.5px;color:var(--tx2);margin-top:2px;font-family:monospace">${link}</div>
-                </div>
-                <button class="btn-irow" onclick="copyLink('${esc(link)}')">
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M13 7V5a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2" stroke="currentColor" stroke-width="2"/></svg>
-                  Copiar link
-                </button>
-              </div>`;
-            }).join('')}
-          </div>`
-      }
+      <div style="font-size:10px;font-weight:600;color:${isTop ? POWER_META[k].color : 'var(--tx2)'};">${n || ''}</div>
     </div>`;
+  }).join('');
+
+  const profileCard = (label, resps, subtitle) => {
+    const prof = calcPowerProfile(resps);
+    return `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:10px;padding:13px 15px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:6px;flex-wrap:wrap">
+        <div style="font-size:12.5px;font-weight:600">${esc(label)}</div>
+        ${powerDominantChip(prof.dominant)}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">${miniBar(prof.counts, prof.total, prof.dominant)}</div>
+      ${subtitle ? `<div style="font-size:9px;color:var(--tx2);margin-top:7px">${subtitle}</div>` : ''}
+    </div>`;
+  };
+
+  let html = `<div style="max-width:860px">`;
+
+  // Description card
+  html += `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:12px;padding:20px 22px;margin-bottom:22px">
+    <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Descripción</div>
+    <p style="font-size:13.5px;line-height:1.65;color:var(--tx);margin:0 0 14px">${esc(m.desc)}</p>
+    <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Cómo funciona</div>
+    <ol style="padding-left:18px;display:flex;flex-direction:column;gap:5px;margin:0">
+      ${m.how.map(h => `<li style="font-size:13px;color:var(--tx2);line-height:1.5">${esc(h)}</li>`).join('')}
+    </ol>
+  </div>`;
+
+  if (allResps.length > 0) {
+    // Consolidated
+    const consolidatedProf = calcPowerProfile(allResps);
+    html += `<div style="margin-bottom:22px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:50%;background:${accentColor};display:inline-block"></span>
+        Resultados consolidados
+        <span style="font-size:11px;font-weight:400;color:var(--tx2)">${allResps.length} evaluación${allResps.length !== 1 ? 'es' : ''} · ${using.length} programa${using.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--pu-border);border-radius:12px;padding:18px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:13px;font-weight:600">Todos los programas</div>
+          ${powerDominantChip(consolidatedProf.dominant)}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:5px">
+          ${POWER_KEYS.map(k => {
+            const n = consolidatedProf.counts[k] || 0;
+            const pct = consolidatedProf.total > 0 ? Math.round(n / consolidatedProf.total * 100) : 0;
+            const isTop = k === consolidatedProf.dominant;
+            return `<div style="display:grid;grid-template-columns:80px 1fr 28px;align-items:center;gap:7px">
+              <div style="font-size:10.5px;color:var(--tx2);text-align:right;${isTop ? 'font-weight:700;color:var(--tx)' : ''}">${POWER_META[k].label}</div>
+              <div style="height:7px;background:var(--pu-border);border-radius:4px;overflow:hidden">
+                <div style="height:100%;border-radius:4px;background:${POWER_META[k].color};width:${pct}%"></div>
+              </div>
+              <div style="font-size:10px;font-weight:600;color:${isTop ? POWER_META[k].color : 'var(--tx2)'};">${n || ''}</div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+
+    // By sector
+    const bySector = {};
+    allResps.forEach(r => {
+      const s = r._sector;
+      if (!bySector[s]) bySector[s] = [];
+      bySector[s].push(r);
+    });
+    const sectors = Object.keys(bySector).sort();
+    if (sectors.length > 1) {
+      html += `<div style="margin-bottom:22px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${accentColor};display:inline-block"></span>
+          Por sector
+          <span style="font-size:11px;font-weight:400;color:var(--tx2)">${sectors.length} sectores</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">
+          ${sectors.map(s => profileCard(s, bySector[s], `${bySector[s].length} evaluación${bySector[s].length !== 1 ? 'es' : ''}`)).join('')}
+        </div>
+      </div>`;
+    }
+
+    // Individual profiles
+    const byEntity = {};
+    allResps.forEach(r => {
+      const eKey = key === 'fr-equipo'
+        ? (r._progName + '·' + (r.leader_name || '?'))
+        : (r._progName + '·' + (r.participant_name || '?'));
+      const label = key === 'fr-equipo' ? (r.leader_name || '?') : (r.participant_name || '?');
+      if (!byEntity[eKey]) byEntity[eKey] = { label, progName: r._progName, sector: r._sector, resps: [] };
+      byEntity[eKey].resps.push(r);
+    });
+    const entities = Object.values(byEntity).sort((a, b) => a.label.localeCompare(b.label));
+    if (entities.length > 0) {
+      const entityLabel = key === 'fr-equipo' ? 'Por líder evaluado' : 'Por participante';
+      html += `<div style="margin-bottom:22px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${accentColor};display:inline-block"></span>
+          ${entityLabel}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:9px">
+          ${entities.map(e => {
+            const sub = `${e.resps.length} evaluación${e.resps.length !== 1 ? 'es' : ''} · ${esc(e.progName)}${e.sector !== 'Sin sector' ? ' · ' + esc(e.sector) : ''}`;
+            return profileCard(e.label, e.resps, sub);
+          }).join('')}
+        </div>
+      </div>`;
+    }
+  }
+
+  // Programs list
+  html += `<div style="margin-bottom:8px">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${accentColor};display:inline-block"></span>
+      Programas <span style="font-size:11px;font-weight:400;color:var(--tx2)">(${using.length})</span>
+    </div>
+    ${using.length === 0
+      ? `<div style="background:var(--card);border:1px dashed var(--pu-border);border-radius:11px;padding:32px;text-align:center;color:var(--tx2);font-size:13px">Ningún programa tiene este instrumento configurado aún.</div>`
+      : `<div style="display:flex;flex-direction:column;gap:9px">${using.map(p => {
+          const link = `${origin}/p/${p.id}/${key}`;
+          const d = detailData[p.id];
+          const instrResps = (d?.responses || []).filter(r => r.instrument === key);
+          return `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:10px;padding:13px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-size:13.5px;font-weight:600">${esc(p.name)}</div>
+              <div style="font-size:11px;color:var(--tx2);margin-top:2px;font-family:monospace">${link}</div>
+              <div style="font-size:10.5px;color:var(--tx2);margin-top:3px">${p.sector ? esc(p.sector) + ' · ' : ''}${instrResps.length} respuesta${instrResps.length !== 1 ? 's' : ''}</div>
+            </div>
+            <button class="btn-irow" onclick="showLinkModal('${esc(link)}','${esc(p.name)}')">
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="11" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M13 7V5a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2" stroke="currentColor" stroke-width="2"/></svg>
+              Ver link
+            </button>
+          </div>`;
+        }).join('')}</div>`
+    }
+  </div>`;
+
+  html += `</div>`;
+  document.getElementById('content').innerHTML = html;
 }
 
 /* ── Load programs ── */
@@ -339,7 +480,7 @@ function render() {
 
   const statsHtml = `<div class="stats">
     <div class="stat"><div class="stat-lbl">Programas activos</div><div class="stat-val">${programs.filter(p=>p.status==='active').length}</div><div class="stat-sub">${programs.filter(p=>p.status==='pending').length} por configurar</div></div>
-    <div class="stat"><div class="stat-lbl">Participantes</div><div class="stat-val">${totalPart||'—'}</div><div class="stat-sub">registrados en total</div></div>
+    <div class="stat"><div class="stat-lbl">Participantes</div><div class="stat-val">${totalPart||'—'}</div><div class="stat-sub">personas únicas</div></div>
     <div class="stat"><div class="stat-lbl">Evaluaciones</div><div class="stat-val">${totalResp||'—'}</div><div class="stat-sub">recibidas en total</div></div>
     <div class="stat"><div class="stat-lbl">Próxima sesión</div><div class="stat-val" style="font-size:17px;margin-top:3px">${next?fmtDate(next.session_date):'—'}</div><div class="stat-sub">${next?esc(next.name):'Sin sesiones'}</div></div>
   </div>`;
@@ -392,7 +533,7 @@ function renderDetail(pid) {
 
   return `<div class="detail">
     <div class="det-hdr">
-      <div><div class="det-ttl">${esc(prog.name)} · Presencia Ejecutiva</div><div class="det-sub">${esc(prog.code||'')} · ${ptlist.length} participante${ptlist.length!==1?'s':''}</div></div>
+      <div><div class="det-ttl">${esc(prog.name)} · Presencia Ejecutiva</div><div class="det-sub">${esc(prog.code||'')}${rlist.length>0?` · ${rlist.length} respuesta${rlist.length!==1?'s':''}`:''}${prog.sector?` · ${esc(prog.sector)}`:''}</div></div>
       <div class="det-acts">
         <button class="btn-w" onclick="openModal('edit-prog')">
           <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-2.207 2.207L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
@@ -406,10 +547,6 @@ function renderDetail(pid) {
           <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg>
           Panorama
         </button>
-        <button class="btn-gld" onclick="openModal('add-part')">
-          <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg>
-          Participante
-        </button>
         <button class="btn btn-danger" style="font-size:12px;padding:6px 12px" onclick="confirmDelete('${esc(pid)}','${esc(prog.name)}')">Eliminar</button>
       </div>
     </div>
@@ -422,58 +559,21 @@ function renderDetail(pid) {
               ? `<div style="font-size:13px;color:var(--tx2)">Sin instrumentos configurados.</div>`
               : instrs.map(i=>{
                   const iResps = rlist.filter(r=>r.instrument===i.key && r.answers && Object.keys(r.answers).length>0);
-                  let respondentRows = '';
-                  if (i.key === 'fr-equipo') {
-                    const byLeader = {};
-                    iResps.forEach(r => {
-                      const k = (r.leader_name||'Sin nombre').trim();
-                      byLeader[k] = (byLeader[k]||0) + 1;
-                    });
-                    respondentRows = Object.entries(byLeader).map(([name, count]) =>
-                      `<div class="resp-row"><span class="pav" style="width:22px;height:22px;font-size:9px">${initials(name)}</span><span style="flex:1">${esc(name)}</span><span style="font-size:11px;color:var(--tx2)">${count} eval.</span></div>`
-                    ).join('');
-                  } else {
-                    const done = new Set(iResps.map(r => r.participant_name));
-                    respondentRows = [...done].map(name =>
-                      `<div class="resp-row"><span class="pav" style="width:22px;height:22px;font-size:9px">${initials(name)}</span><span style="flex:1">${esc(name)}</span><span style="color:var(--ok);font-size:12px">✓</span></div>`
-                    ).join('');
-                  }
                   return `<div class="irow">
                     <div class="irow-info"><div class="idot ${i.tag}"></div><div>
                       <div class="irow-name">${esc(i.label)}</div>
                       <div class="irow-type">${esc(i.desc)}${i.start_date?` · <strong>${fmtDateShort(i.start_date)}</strong>${i.end_date?` → ${fmtDateShort(i.end_date)}`:''}`:''}</div>
                     </div></div>
                     <div style="display:flex;align-items:center;gap:10px">
-                      <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${i.key==='fr-equipo'?iResps.length:ptlist.length}</span></div><div class="of">completaron</div></div>
-                      <button class="btn-irow" onclick="copyLink('${esc(link)}/${esc(i.key)}')">
+                      <div class="irow-stat"><div class="n">${instrCounts[i.key]}<span style="font-size:12px;font-weight:400;color:var(--tx2)">/${iResps.length}</span></div><div class="of">completaron</div></div>
+                      <button class="btn-irow" onclick="showLinkModal('${esc(link)}/${esc(i.key)}','${esc(i.label)}')">
                         <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor"><path d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z"/></svg>
-                        Copiar link
+                        Ver link
                       </button>
                     </div>
-                    ${respondentRows ? `<div class="resp-list">${respondentRows}</div>` : ''}
                   </div>`;
                 }).join('')}
           </div>
-          ${frResps.length>0?`<div style="margin-top:16px"><div class="det-col-ttl">F&R agregado · ${esc(prog.name)}</div>${buildChart(frResps)}</div>`:''}
-        </div>
-        <div>
-          <div class="det-col-ttl">Participantes</div>
-          <table class="ptbl">
-            <thead><tr><th>Nombre</th>${instrs.map(i=>`<th style="text-align:center">${i.key==='fr-equipo'?'F&R':'RBS'}</th>`).join('')}</tr></thead>
-            <tbody>
-              ${ptlist.length===0
-                ? `<tr><td colspan="${1+instrs.length}" style="color:var(--tx2);font-size:12px;padding:10px 0">Agrega participantes para comenzar.</td></tr>`
-                : ptlist.map(pt=>{
-                    const done={};
-                    rlist.filter(r=>r.participant_name===pt.name).forEach(r=>{done[r.instrument]=true});
-                    return `<tr>
-                      <td><span class="pav">${initials(pt.name)}</span>${esc(pt.name)}</td>
-                      ${instrs.map(i=>`<td style="text-align:center">${done[i.key]?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--tx2)">—</span>'}</td>`).join('')}
-                    </tr>`;
-                  }).join('')}
-            </tbody>
-          </table>
-          ${ptlist.length>0?`<div class="add-link" onclick="openModal('add-part')"><svg viewBox="0 0 20 20" fill="currentColor" style="width:13px;height:13px"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg> Agregar participante</div>`:''}
         </div>
       </div>
     </div>
@@ -552,7 +652,8 @@ function showPanorama(pid) {
   setNavActive('nav-progs');
   document.querySelector('.tb-title').textContent = `Panorama — ${prog.name}`;
   document.querySelector('.tb-acts').innerHTML =
-    `<button class="btn btn-ghost" onclick="showPrograms();selectProg('${esc(pid)}')">← Volver al programa</button>`;
+    `<button class="btn btn-ghost" onclick="showPrograms();selectProg('${esc(pid)}')">← Volver al programa</button>
+     <button class="btn btn-secondary" onclick="downloadPanorama('${esc(pid)}')">↓ Descargar reporte</button>`;
 
   // ── FR-EQUIPO: agrupar por líder (clave: leader_name normalizado) ──
   const frResps = rlist.filter(r => r.instrument === 'fr-equipo' && r.answers && Object.keys(r.answers).length > 0);
@@ -627,6 +728,7 @@ function showPanorama(pid) {
              }).join('')}
            </div>`
       }
+      ${Object.keys(byRbs).length > 0 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--pu-border);display:flex;flex-wrap:wrap;gap:4px">${Object.values(byRbs).map(({display}) => '<span style="font-size:10px;color:var(--tx2);background:var(--pu-border);border-radius:20px;padding:2px 8px;white-space:nowrap">✓ ' + esc(display) + '</span>').join('')}</div>` : ''}
     </div>`;
 
     // Columna FR empresa
@@ -652,59 +754,67 @@ function showPanorama(pid) {
              }).join('')}
            </div>`
       }
+      ${Object.keys(byLeader).length > 0 ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--pu-border);display:flex;flex-wrap:wrap;gap:4px">${Object.values(byLeader).map(({display, resps}) => '<span style="font-size:10px;color:var(--tx2);background:var(--pu-border);border-radius:20px;padding:2px 8px;white-space:nowrap">✓ ' + esc(display) + ' · ' + resps.length + '</span>').join('')}</div>` : ''}
     </div>`;
     html += `</div>`; // end grid empresa
   }
 
-  // ─── Tarjetas individuales ───
-  if (allNames.size > 0) {
-    html += `<div style="font-size:14px;font-weight:600;margin-bottom:14px">Perfiles individuales
-      <span style="font-size:12px;font-weight:400;color:var(--tx2);margin-left:8px">
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#2980b9;display:inline-block"></span>Autopercepción · RBS</span>
-        &nbsp;&nbsp;
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#8e44ad;display:inline-block"></span>Percepción del equipo · F&R</span>
-      </span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px">`;
+  // ─── Tarjetas individuales por instrumento ───
+  const miniBarSm = (counts, total, dominant) => POWER_KEYS.map(k => {
+    const n = counts[k] || 0;
+    const pct = total > 0 ? Math.round(n/total*100) : 0;
+    const isTop = k === dominant;
+    return `<div style="display:grid;grid-template-columns:60px 1fr 16px;align-items:center;gap:5px">
+      <div style="font-size:9.5px;color:var(--tx2);text-align:right;${isTop?'font-weight:700;color:var(--tx)':''}">${POWER_META[k].label}</div>
+      <div style="height:5px;background:var(--pu-border);border-radius:3px;overflow:hidden">
+        <div style="height:100%;border-radius:3px;background:${POWER_META[k].color};width:${pct}%"></div>
+      </div>
+      <div style="font-size:9px;font-weight:600;color:${isTop?POWER_META[k].color:'var(--tx2)'};">${n||''}</div>
+    </div>`;
+  }).join('');
 
-    [...allNames].sort().forEach(key => {
-      const frEntry  = byLeader[key];
-      const rbsEntry = byRbs[key];
-      const displayName = (frEntry?.display || rbsEntry?.display || key);
-
-      const frProfile  = frEntry  ? calcPowerProfile(frEntry.resps)  : null;
-      const rbsProfile = rbsEntry ? calcPowerProfile(rbsEntry.resps) : null;
-
-      const hasBoth = frProfile && rbsProfile;
-      const diff = hasBoth && frProfile.dominant !== rbsProfile.dominant;
-
-      html += `<div style="background:var(--card);border:1px solid ${diff?'rgba(233,160,32,.5)':' var(--pu-border)'};border-radius:12px;padding:18px 20px;${diff?'box-shadow:0 0 0 2px rgba(233,160,32,.12)':''}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-          <div style="font-size:15px;font-weight:600">${esc(displayName)}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${rbsProfile ? `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="width:7px;height:7px;border-radius:50%;background:#2980b9;display:inline-block"></span>RBS: ${powerDominantChip(rbsProfile.dominant)}</div>` : ''}
-            ${frProfile  ? `<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx2)"><span style="width:7px;height:7px;border-radius:50%;background:#8e44ad;display:inline-block"></span>F&R: ${powerDominantChip(frProfile.dominant)}</div>` : ''}
-            ${diff ? `<div style="font-size:11px;font-weight:600;color:#9A6200;background:#FFF3DC;border:1px solid #F5D98A;padding:3px 9px;border-radius:20px">Brecha detectada</div>` : ''}
+  if (totalRbs > 0 || totalFR > 0) {
+    // ── Sección RBS ──
+    if (totalRbs > 0) {
+      html += `<div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:7px">
+        <span style="width:9px;height:9px;border-radius:50%;background:#2980b9;display:inline-block"></span>
+        Autopercepción · Reflected Best Self
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:22px">`;
+      Object.values(byRbs).sort((a,b)=>a.display.localeCompare(b.display)).forEach(({display, resps}) => {
+        const prof = calcPowerProfile(resps);
+        html += `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:10px;padding:11px 13px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px;flex-wrap:wrap">
+            <div style="font-size:12px;font-weight:600">${esc(display)}</div>
+            ${powerDominantChip(prof.dominant)}
           </div>
-        </div>
-        <div style="display:grid;grid-template-columns:${hasBoth?'1fr 1px 1fr':'1fr'};gap:16px;align-items:start">
-          ${rbsProfile
-            ? leaderCard(displayName, rbsProfile.counts, rbsProfile.total, rbsProfile.dominant,
-                '🔵 Cómo se percibe a sí mismo/a · Reflected Best Self',
-                `${rbsEntry.resps.length} autoevaluación${rbsEntry.resps.length!==1?'es':''}`)
-            : `<div style="font-size:12px;color:var(--tx2);padding:8px 0">Sin autoevaluación RBS registrada.</div>`
-          }
-          ${hasBoth ? `<div style="background:var(--pu-border);width:1px;align-self:stretch"></div>` : ''}
-          ${frProfile
-            ? leaderCard(displayName, frProfile.counts, frProfile.total, frProfile.dominant,
-                '🟣 Cómo lo percibe su equipo · French & Raven',
-                `${frEntry.resps.length} evaluación${frEntry.resps.length!==1?'es':''} del equipo`)
-            : `<div style="font-size:12px;color:var(--tx2);padding:8px 0">Sin evaluación de equipo (F&R) registrada.</div>`
-          }
-        </div>
-      </div>`;
-    });
-    html += `</div>`;
+          <div style="display:flex;flex-direction:column;gap:3px">${miniBarSm(prof.counts, prof.total, prof.dominant)}</div>
+          <div style="font-size:9px;color:var(--tx2);margin-top:6px">${resps.length} autoevaluación${resps.length!==1?'es':''}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // ── Sección F&R ──
+    if (totalFR > 0) {
+      html += `<div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:7px">
+        <span style="width:9px;height:9px;border-radius:50%;background:#8e44ad;display:inline-block"></span>
+        Percepción del equipo · French &amp; Raven
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:24px">`;
+      Object.values(byLeader).sort((a,b)=>a.display.localeCompare(b.display)).forEach(({display, resps}) => {
+        const prof = calcPowerProfile(resps);
+        html += `<div style="background:var(--card);border:1px solid var(--pu-border);border-radius:10px;padding:11px 13px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px;flex-wrap:wrap">
+            <div style="font-size:12px;font-weight:600">${esc(display)}</div>
+            ${powerDominantChip(prof.dominant)}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">${miniBarSm(prof.counts, prof.total, prof.dominant)}</div>
+          <div style="font-size:9px;color:var(--tx2);margin-top:6px">${resps.length} evaluación${resps.length!==1?'es':''} del equipo</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   } else {
     html += `<div style="background:var(--card);border:1px dashed var(--pu-border);border-radius:11px;padding:40px;text-align:center;color:var(--tx2);font-size:13px">
       Aún no hay evaluaciones registradas para este programa.
@@ -713,6 +823,147 @@ function showPanorama(pid) {
 
   html += `</div>`;
   document.getElementById('content').innerHTML = html;
+}
+
+/* ── Download Instrument Results ── */
+function downloadInstr(key) {
+  const m = INSTR_META[key];
+  const using = programs.filter(p => instrList(p.instruments).some(i => i.key === key));
+  const csvEsc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const now = new Date().toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit', year:'numeric' });
+
+  // Collect all responses
+  const allResps = [];
+  using.forEach(p => {
+    const d = detailData[p.id];
+    if (!d) return;
+    (d.responses || []).filter(r => r.instrument === key).forEach(r =>
+      allResps.push({ ...r, _sector: p.sector || '', _progName: p.name })
+    );
+  });
+
+  const rows = [];
+  rows.push([csvEsc('Instrumento'), csvEsc(m.label)].join(','));
+  rows.push([csvEsc('Generado'), csvEsc(now)].join(','));
+  rows.push([csvEsc('Total evaluaciones'), csvEsc(allResps.length)].join(','));
+  rows.push('');
+
+  // Header row
+  const entityCol = key === 'fr-equipo' ? 'Líder' : 'Participante';
+  rows.push(['Programa','Sector', entityCol,'Coercitivo','Recompensa','Legítimo','Experto','Referente','Informacional','Base Dominante'].map(csvEsc).join(','));
+
+  // Group by entity within each program
+  const byEntity = {};
+  allResps.forEach(r => {
+    const eKey = r._progName + '·' + (key === 'fr-equipo' ? r.leader_name : r.participant_name);
+    const label = key === 'fr-equipo' ? (r.leader_name || '?') : (r.participant_name || '?');
+    if (!byEntity[eKey]) byEntity[eKey] = { label, prog: r._progName, sector: r._sector, resps: [] };
+    byEntity[eKey].resps.push(r);
+  });
+
+  Object.values(byEntity).sort((a,b) => a.prog.localeCompare(b.prog) || a.label.localeCompare(b.label)).forEach(e => {
+    const prof = calcPowerProfile(e.resps);
+    rows.push([e.prog, e.sector, e.label,
+      prof.counts.coercitivo||0, prof.counts.recompensa||0, prof.counts.legitimo||0,
+      prof.counts.experto||0, prof.counts.referente||0, prof.counts.informacional||0,
+      POWER_META[prof.dominant]?.label || ''
+    ].map(csvEsc).join(','));
+  });
+
+  // Consolidated row
+  if (allResps.length > 0) {
+    rows.push('');
+    const cp = calcPowerProfile(allResps);
+    rows.push(['CONSOLIDADO','','Todos',
+      cp.counts.coercitivo||0, cp.counts.recompensa||0, cp.counts.legitimo||0,
+      cp.counts.experto||0, cp.counts.referente||0, cp.counts.informacional||0,
+      POWER_META[cp.dominant]?.label || ''
+    ].map(csvEsc).join(','));
+  }
+
+  const csv = '﻿' + rows.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `resultados-${key}-${now.replace(/\//g,'-')}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── Download Panorama Report ── */
+function downloadPanorama(pid) {
+  const prog = programs.find(p => p.id === pid);
+  const d = detailData[pid];
+  if (!prog || !d) return;
+
+  const rlist = d.responses || [];
+  const frResps = rlist.filter(r => r.instrument === 'fr-equipo' && r.answers && Object.keys(r.answers).length > 0);
+  const rbsResps = rlist.filter(r => r.instrument === 'rbs' && r.answers && Object.keys(r.answers).length > 0);
+
+  const byLeader = {};
+  frResps.forEach(r => {
+    const key = (r.leader_name || r.participant_name || 'Sin nombre').trim().toLowerCase();
+    const display = (r.leader_name || r.participant_name || 'Sin nombre').trim();
+    if (!byLeader[key]) byLeader[key] = { display, resps: [] };
+    byLeader[key].resps.push(r);
+  });
+  const byRbs = {};
+  rbsResps.forEach(r => {
+    const key = (r.participant_name || 'Sin nombre').trim().toLowerCase();
+    const display = (r.participant_name || 'Sin nombre').trim();
+    if (!byRbs[key]) byRbs[key] = { display, resps: [] };
+    byRbs[key].resps.push(r);
+  });
+
+  const pmeta = (k) => POWER_META[k] || { label: k, color: '#999' };
+  const date = prog.session_date ? new Date(prog.session_date).toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' }) : '';
+  const now  = new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric' });
+
+  const csvEsc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [];
+
+  rows.push(['Programa', 'Contexto', 'Fecha sesión', 'Generado'].map(csvEsc).join(','));
+  rows.push([prog.name, prog.context||'', date, now].map(csvEsc).join(','));
+  rows.push([]);
+
+  // RBS
+  if (Object.keys(byRbs).length > 0) {
+    rows.push(['INSTRUMENTO','PARTICIPANTE','Coercitivo','Recompensa','Legítimo','Experto','Referente','Informacional','Base Dominante','Evaluaciones'].map(csvEsc).join(','));
+    Object.values(byRbs).sort((a,b) => a.display.localeCompare(b.display)).forEach(({display, resps}) => {
+      const prof = calcPowerProfile(resps);
+      rows.push([
+        'RBS – Autopercepción', display,
+        prof.counts.coercitivo||0, prof.counts.recompensa||0, prof.counts.legitimo||0,
+        prof.counts.experto||0, prof.counts.referente||0, prof.counts.informacional||0,
+        pmeta(prof.dominant).label, resps.length
+      ].map(csvEsc).join(','));
+    });
+    rows.push([]);
+  }
+
+  // F&R
+  if (Object.keys(byLeader).length > 0) {
+    rows.push(['INSTRUMENTO','LÍDER','Coercitivo','Recompensa','Legítimo','Experto','Referente','Informacional','Base Dominante','Evaluaciones'].map(csvEsc).join(','));
+    Object.values(byLeader).sort((a,b) => a.display.localeCompare(b.display)).forEach(({display, resps}) => {
+      const prof = calcPowerProfile(resps);
+      rows.push([
+        'F&R – Percepción equipo', display,
+        prof.counts.coercitivo||0, prof.counts.recompensa||0, prof.counts.legitimo||0,
+        prof.counts.experto||0, prof.counts.referente||0, prof.counts.informacional||0,
+        pmeta(prof.dominant).label, resps.length
+      ].map(csvEsc).join(','));
+    });
+  }
+
+  const csv  = '﻿' + rows.map(r => Array.isArray(r) ? '' : r).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `reporte-${prog.name.replace(/\s+/g, '-').toLowerCase()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ── Actions ── */
@@ -756,6 +1007,30 @@ async function deleteProg(id) {
 
 function copyLink(url) {
   navigator.clipboard.writeText(url).then(()=>showToast('✓ Link copiado')).catch(()=>showToast(url));
+}
+
+function showLinkModal(url, label) {
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="max-width:420px;width:92%">
+      <div class="modal-hdr"><span>${esc(label)}</span><button class="modal-x" onclick="closeModal()">✕</button></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px 0 4px">
+        <div id="qr-canvas" style="background:#fff;padding:12px;border-radius:10px;border:1px solid var(--pu-border)"></div>
+        <div style="font-size:11.5px;font-family:monospace;color:var(--tx2);word-break:break-all;text-align:center;padding:0 4px">${esc(url)}</div>
+        <button class="btn btn-primary" style="width:100%" onclick="navigator.clipboard.writeText('${esc(url)}').then(()=>showToast('✓ Link copiado'))">
+          Copiar link
+        </button>
+      </div>
+    </div>
+  </div>`;
+  root.hidden = false;
+  setTimeout(() => {
+    new QRCode(document.getElementById('qr-canvas'), {
+      text: url, width: 200, height: 200,
+      colorDark: '#1C0D36', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }, 50);
 }
 
 /* ── Invite Modal ── */
